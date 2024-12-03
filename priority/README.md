@@ -2,35 +2,35 @@
 
 ## Purpose
 
-Used to distributes data among handlers according to priority
+Distributes data items between handlers in quantity corresponding to the priority of the data items
 
-Also may be used to equaling distribution of data with different processing times
+Also may be used to equaling distribution of data items with different processing times
 
 ## Principle of operation
 
 * Prioritization:
 
-  ![Principle of operation, prioritization](./doc/operation-principle-321.svg)
+  ![Principle of operation, prioritization](doc/operation-principle-321.svg)
 
 * Equaling:
 
-  ![Principle of operation, equaling](./doc/operation-principle-222.svg)
+  ![Principle of operation, equaling](doc/operation-principle-222.svg)
 
 ## Comparison with unmanaged distribution
 
 If different times are spent processing data of different priorities, then we will get different processing speeds in the case of using the priority discipline and without it.
 
-For example, suppose that data from channel of priority 3 is processed in time **T**, data from channel of priority 2 is processed in time 5\***T**, and data from channel of priority 1 is processed in time 10\***T**, then we will get the following results (number of processed data and the number of handlers are the same in both cases):
+For example, suppose that data of priority 3 is processed in time **T**, data of priority 2 is processed in time 5\***T**, and data of priority 1 is processed in time 10\***T**, then we will get the following results (quantity of processed data and the quantity of handlers are the same in both cases):
 
 * equaling by priority discipline:
 
-  ![Equaling by priority discipline](./doc/different-processing-time-equaling.svg)
+  ![Equaling by priority discipline](doc/different-processing-time-equaling.svg)
 
 * unmanaged distribution:
 
-  ![Unmanaged distribution](./doc/different-processing-time-unmanagement.svg)
+  ![Unmanaged distribution](doc/different-processing-time-unmanaged.svg)
 
-It can be seen that with unmanaged distribution, the processing speed of data with priority 3 is limited by the slowest processed data (with priority 1 and 2), but at with equaling by priority discipline the processing speed of data with priority 3 is no limited by others priorities. Similarly, with unmanaged distribution, the processing speed of data with priority 2 is limited by slower processed data with priority 1, but there is no such limitation with equaling by priority discipline
+It can be seen that with unmanaged distribution, the processing speed of data of priority 3 is limited by the slowest processed data (of priority 1 and 2), but at with equaling by the priority discipline the processing speed of data of priority 3 is no limited by others priorities. Similarly, with unmanaged distribution, the processing speed of data of priority 2 is limited by slower processed data of priority 1, but there is no such limitation with equaling by the priority discipline
 
 ## Usage
 
@@ -40,111 +40,15 @@ Example:
 package main
 
 import (
-    "fmt"
-
-    "github.com/akramarenkov/flow/priority"
-    "github.com/akramarenkov/flow/priority/divider"
-)
-
-func main() {
-    handlersQuantity := uint(100)
-    itemsQuantity := 10000
-    // Preferably, input channels should be buffered for performance reasons
-    inputCapacity := 10
-
-    inputs := map[uint]chan int{
-        70: make(chan int, inputCapacity),
-        20: make(chan int, inputCapacity),
-        10: make(chan int, inputCapacity),
-    }
-
-    // Map key is a value of priority
-    inputsOpts := make(map[uint]<-chan int, len(inputs))
-
-    for priority, channel := range inputs {
-        inputsOpts[priority] = channel
-    }
-
-    // Used only in this example for measuring input data
-    measurements := make(chan int)
-
-    // For equaling use divider.Fair divider, for prioritization use
-    // divider.Rate divider or custom divider
-    opts := priority.Opts[int]{
-        Divider:          divider.Rate,
-        HandlersQuantity: handlersQuantity,
-        Inputs:           inputsOpts,
-    }
-
-    discipline, err := priority.New(opts)
-    if err != nil {
-        panic(err)
-    }
-
-    // Running writers, that write data to input channels
-    for _, input := range inputs {
-        go func(channel chan int) {
-            defer close(channel)
-
-            for id := range itemsQuantity {
-                channel <- id
-            }
-        }(input)
-    }
-
-    // Running handlers, that process data
-    for range handlersQuantity {
-        go func() {
-            for prioritized := range discipline.Output() {
-                // Data processing
-                measurements <- prioritized.Item
-
-                // Handler must indicate that current data has been processed and
-                // handler is ready to receive new data
-                discipline.Release(prioritized.Priority)
-            }
-        }()
-    }
-
-    // Waiting for the completion of the discipline
-    go func() {
-        defer close(measurements)
-
-        for err := range discipline.Err() {
-            if err != nil {
-                fmt.Println("An error was received: ", err)
-            }
-        }
-    }()
-
-    received := 0
-
-    // Receiving the measurements data
-    for range measurements {
-        received++
-    }
-
-    fmt.Println("Processed data items quantity:", received)
-    // Output: Processed data items quantity: 30000
-}
-```
-
-Example with graph:
-
-```go
-package main
-
-import (
+    "cmp"
     "fmt"
     "os"
     "slices"
-    "sort"
     "strconv"
     "time"
 
     "github.com/akramarenkov/flow/priority"
     "github.com/akramarenkov/flow/priority/divider"
-    "github.com/akramarenkov/flow/priority/priolist"
 
     "github.com/guptarohit/asciigraph"
 )
@@ -152,10 +56,10 @@ import (
 func main() {
     handlersQuantity := uint(100)
     itemsQuantity := 10000
-    // Preferably, input channels should be buffered for performance reasons
-    inputCapacity := 10
-
-    processingTime := 10 * time.Millisecond
+    // Preferably input channels should be buffered for performance reasons.
+    // Optimal capacity is in the range of 1 to 3 times of quantity of data handlers
+    inputCapacity := handlersQuantity
+    processingDuration := 10 * time.Millisecond
     graphInterval := 100 * time.Millisecond
     graphRange := 5 * time.Second
 
@@ -165,29 +69,31 @@ func main() {
         10: make(chan int, inputCapacity),
     }
 
-    // Map key is a value of priority
-    inputsOpts := make(map[uint]<-chan int, len(inputs))
-
-    for priority, channel := range inputs {
-        inputsOpts[priority] = channel
-    }
-
-    // Used only in this example for measuring input data
+    // Used only in this example for measuring receiving of data items
     type measure struct {
-        priority     uint
-        relativeTime time.Duration
+        Priority uint
+        Time     time.Duration
     }
 
-    // Channel size is equal to the total amount of input data in order to minimize
-    // delays in collecting measurements
+    compareTime := func(first, second measure) int {
+        return cmp.Compare(first.Time, second.Time)
+    }
+
+    // Channel capacity is equal to the total quantity of input data in order to
+    // minimize delays in collecting measurements
     measurements := make(chan measure, itemsQuantity*len(inputs))
 
-    // For equaling use divider.Fair divider, for prioritization use
-    // divider.Rate divider or custom divider
+    // For equaling use divider.Fair divider, for prioritization use divider.Rate
+    // divider or custom divider
     opts := priority.Opts[int]{
         Divider:          divider.Rate,
         HandlersQuantity: handlersQuantity,
-        Inputs:           inputsOpts,
+    }
+
+    for priority, channel := range inputs {
+        if err := opts.AddInput(priority, channel); err != nil {
+            panic(err)
+        }
     }
 
     discipline, err := priority.New(opts)
@@ -195,80 +101,72 @@ func main() {
         panic(err)
     }
 
-    // Running writers, that write data to input channels
+    // Running writers, that write data items to input channels
     for _, input := range inputs {
-        go func(channel chan int) {
-            defer close(channel)
+        go func() {
+            defer close(input)
 
-            for id := range itemsQuantity {
-                channel <- id
+            for item := range itemsQuantity {
+                input <- item
             }
-        }(input)
+        }()
     }
 
     startedAt := time.Now()
 
-    // Running handlers, that process data
+    // Running handlers, that process data items
     for range handlersQuantity {
         go func() {
             for prioritized := range discipline.Output() {
-                // Data processing
-                item := measure{
-                    priority:     prioritized.Priority,
-                    relativeTime: time.Since(startedAt),
+                // Data item processing
+                measurement := measure{
+                    Priority: prioritized.Priority,
+                    Time:     time.Since(startedAt),
                 }
 
-                time.Sleep(processingTime)
+                time.Sleep(processingDuration)
 
-                measurements <- item
+                measurements <- measurement
 
-                // Handler must indicate that current data has been processed and
-                // handler is ready to receive new data
+                // Handlers must call this method after the current data item has been
+                // processed
                 discipline.Release(prioritized.Priority)
             }
         }()
     }
 
-    // Waiting for the completion of the discipline
-    go func() {
-        defer close(measurements)
+    // Waiting for completion of the discipline, and also writers and handlers
+    if err := <-discipline.Err(); err != nil {
+        fmt.Println("An error was received: ", err)
+    }
 
-        for err := range discipline.Err() {
-            if err != nil {
-                fmt.Println("An error was received: ", err)
-            }
-        }
-    }()
+    close(measurements)
 
     received := make(map[uint][]measure, len(inputs))
 
-    // Receiving the measurements data
+    // Receiving measurements
     for item := range measurements {
-        received[item.priority] = append(received[item.priority], item)
+        received[item.Priority] = append(received[item.Priority], item)
     }
 
-    // Sort measurements data by relative time for further research
-    for _, measures := range received {
-        less := func(i int, j int) bool {
-            return measures[i].relativeTime < measures[j].relativeTime
-        }
-
-        sort.SliceStable(measures, less)
+    // Sorting measurements by time for further research
+    for _, measurements := range received {
+        slices.SortFunc(measurements, compareTime)
     }
 
-    // Calculating quantity of input data received by handlers over time
+    // Calculating quantity of data items received by handlers over time
     quantities := make(map[uint][]float64)
 
     for span := time.Duration(0); span <= graphRange; span += graphInterval {
-        for priority, measures := range received {
+        for priority, measurements := range received {
             quantity := float64(0)
 
-            for _, measure := range measures {
-                if measure.relativeTime < span-graphInterval {
+            for _, measure := range measurements {
+                if measure.Time < span-graphInterval {
                     continue
                 }
 
-                if measure.relativeTime >= span {
+                if measure.Time >= span {
                     break
                 }
 
@@ -289,23 +187,22 @@ func main() {
     }
 
     // To keep the legends in the same order
-    slices.SortFunc(priorities, priolist.Cmp)
+    slices.SortFunc(priorities, priority.Compare)
 
     for _, priority := range priorities {
         serieses = append(serieses, quantities[priority])
-        legends = append(legends, strconv.Itoa(int(priority)))
+        legends = append(legends, strconv.FormatUint(uint64(priority), 10))
     }
 
     graph := asciigraph.PlotMany(
         serieses,
         asciigraph.Height(10),
-        asciigraph.Caption("Quantity of data received by handlers over time"),
+        asciigraph.Caption("Quantity of data items received by handlers over time"),
         asciigraph.SeriesColors(asciigraph.Red, asciigraph.Green, asciigraph.Blue),
         asciigraph.SeriesLegends(legends...),
     )
 
     fmt.Fprintln(os.Stderr, graph)
-
     fmt.Println("See graph")
     // Output:
     // See graph

@@ -2,13 +2,13 @@
 
 ## Purpose
 
-Accumulates elements from an input channel into a slice and write that slice to an output channel when the maximum slice size or timeout for its accumulation is reached
+Accumulates data items from an input channel into a slice and write that slice to an output channel when the maximum slice size or timeout for its accumulation is reached
 
 Works in two modes:
 
-1. Making a copy of the slice before writing it to the output channel
+1. Making a copy of the accumulated slice before writing it to the output channel
 
-2. Writes to the output channel of the accumulated slice without copying, in this case it is necessary to inform the discipline that the slice is no longer used by call the Release() method
+2. Writing to the output channel the accumulated slice without copying, in this case it is necessary to inform the discipline that the slice is no longer used by call the Release method
 
 ## Usage
 
@@ -33,7 +33,7 @@ func main() {
     }
 
     // Preferably input channel should be buffered for performance reasons.
-    // Optimal capacity is in the range of one to three JoinSize
+    // Optimal capacity is in the range of 1 to 3 size of join
     input := make(chan int, 10)
 
     opts := join.Opts[int]{
@@ -57,6 +57,7 @@ func main() {
 
     for join := range discipline.Output() {
         fmt.Println(join)
+        discipline.Release()
     }
     // Output:
     // [1 2 3 4 5 6 7 8 9 10]

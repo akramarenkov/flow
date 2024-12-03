@@ -1,32 +1,24 @@
-// Here are implemented several dividers that determine in what quantity data handlers
-// are distributed by priorities.
+// Here are implemented several dividers that determine in what quantity data items
+// distributed among data handlers.
 package divider
 
 import (
 	"github.com/akramarenkov/safe"
 )
 
-// Determines in what quantity data handlers are distributed by priorities.
-//
-// Slice of priorities is passed to this function sorted in descending order,
-// there can't be zero length and cannot contain zero priority. Divider must not
-// change this slice.
-//
-// Distribution map passed to this function is never nil.
-//
-// Sum of the quantities of data handlers distributed by this function must be equal
-// to the passed quantity of data handlers.
-type Divider func(priorities []uint, quantity uint, distribution map[uint]uint)
-
-// Distributes data handlers evenly by priorities.
+// Distributes data items evenly among data handlers.
 //
 // Used for equaling.
 //
+// To keep processing data items of all priorities, the quantity of data handlers must
+// be no less than the quantity of priorities.
+//
 // Example results:
 //
-//   - 6 / [3 2 1] = map[3:2, 2:2, 1:2]
-//   - 100 / [70 20 10] = map[70:34, 20:33, 10:33]
-func Fair(priorities []uint, quantity uint, distribution map[uint]uint) {
+//   - 6 / [3 2 1] = map[3:2 2:2 1:2]
+//   - 10 / [7 2 1] = map[7:4 2:3 1:3]
+//   - 100 / [70 20 10] = map[70:34 20:33 10:33]
+func Fair(quantity uint, priorities []uint, distribution map[uint]uint) error {
 	divider := uint(len(priorities))
 	base := quantity / divider
 	remainder := quantity % divider
@@ -43,27 +35,33 @@ func Fair(priorities []uint, quantity uint, distribution map[uint]uint) {
 
 		distribution[priority] += part
 	}
+
+	return nil
 }
 
-// Distributes data handlers by priorities in proportion to the priority value.
+// Distributes data items among data handlers in ratio to the priority of data item.
 //
 // Used for prioritization.
 //
+// To keep processing data items of all priorities, the quantity of data handlers must
+// be no less than the sum of the values ​​of all priorities.
+//
 // Example results:
 //
-//   - 6 / [3 2 1] = map[3:3, 2:2, 1:1]
-//   - 100 / [70 20 10] = map[70:70, 20:20, 10:10]
-func Rate(priorities []uint, quantity uint, distribution map[uint]uint) {
+//   - 6 / [3 2 1] = map[3:3 2:2 1:1]
+//   - 10 / [7 2 1] = map[7:7 2:2 1:1]
+//   - 100 / [70 20 10] = map[70:70 20:20 10:10]
+func Rate(quantity uint, priorities []uint, distribution map[uint]uint) error {
 	divider, err := safe.AddMU(priorities...)
 	if err != nil {
-		panic(err)
+		return err
 	}
 
 	base := quantity / divider
 	remainder := quantity % divider
 
-	// Ensures rapid achievement of full distribution filling at small values ​​of
-	// quantity to speed up the work of discipline with a small number of handlers
+	// Provides rapid achievement of full distribution filling at small values ​​of
+	// quantity of data handlers to speed up work of the discipline
 	quicking := uint(len(priorities))
 
 	if quicking > remainder {
@@ -93,4 +91,6 @@ func Rate(priorities []uint, quantity uint, distribution map[uint]uint) {
 
 		distribution[priority] += part
 	}
+
+	return nil
 }

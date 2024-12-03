@@ -9,10 +9,9 @@ import (
 
 	"github.com/akramarenkov/flow/internal/env"
 	"github.com/akramarenkov/flow/priority/divider"
-	"github.com/akramarenkov/flow/priority/internal/measurer"
+	"github.com/akramarenkov/flow/priority/internal/measuring"
 	"github.com/akramarenkov/flow/priority/internal/research"
 	"github.com/akramarenkov/flow/priority/internal/unmanaged"
-	"github.com/akramarenkov/flow/priority/priolist"
 
 	"github.com/stretchr/testify/require"
 	"github.com/wcharczuk/go-chart/v2"
@@ -42,73 +41,77 @@ func testReadmeGraph(t *testing.T, equaling bool) {
 		t.SkipNow()
 	}
 
-	measurerOpts := measurer.Opts{
-		HandlersQuantity: 6,
-	}
-
-	msr := measurer.New(measurerOpts)
+	msr, err := measuring.NewMeasurer(6)
+	require.NoError(t, err)
 
 	msr.AddWrite(1, 500)
 	msr.AddWrite(2, 500)
 	msr.AddWrite(3, 500)
 
-	msr.SetProcessDelay(1, 100*time.Millisecond)
-	msr.SetProcessDelay(2, 50*time.Millisecond)
-	msr.SetProcessDelay(3, 10*time.Millisecond)
+	msr.SetProcessingDuration(1, 100*time.Millisecond)
+	msr.SetProcessingDuration(2, 50*time.Millisecond)
+	msr.SetProcessingDuration(3, 10*time.Millisecond)
 
-	overTimeResolution := 100 * time.Millisecond
-	overTimeUnit := time.Second
-	overTimeUnitName := "seconds"
+	graphInterval := 100 * time.Millisecond
+	graphTimeUnit := time.Second
+	graphTimeUnitName := "seconds"
 
 	if equaling {
 		opts := Opts[uint]{
 			Divider:          divider.Fair,
-			HandlersQuantity: measurerOpts.HandlersQuantity,
-			Inputs:           msr.GetInputs(),
+			HandlersQuantity: msr.HandlersQuantity(),
+			Inputs:           msr.Inputs(),
 		}
 
 		discipline, err := New(opts)
 		require.NoError(t, err)
 
+		measurements, err := msr.Play(discipline)
+		require.NoError(t, err)
+
 		createReadmeGraph(
 			t,
-			"./doc/different-processing-time-equaling.svg",
-			msr.Play(discipline),
-			overTimeResolution,
-			overTimeUnit,
-			overTimeUnitName,
+			"doc/different-processing-time-equaling.svg",
+			measurements,
+			graphInterval,
+			graphTimeUnit,
+			graphTimeUnitName,
 		)
 
 		return
 	}
 
-	unmanagedOpts := unmanaged.Opts[uint]{
-		Inputs: msr.GetInputs(),
+	opts := unmanaged.Opts[uint]{
+		HandlersQuantity: msr.HandlersQuantity(),
+		Inputs:           msr.Inputs(),
 	}
 
-	unmanaged, err := unmanaged.New(unmanagedOpts)
+	discipline, err := unmanaged.New(opts)
+	require.NoError(t, err)
+
+	measurements, err := msr.Play(discipline)
 	require.NoError(t, err)
 
 	createReadmeGraph(
 		t,
-		"./doc/different-processing-time-unmanagement.svg",
-		msr.Play(unmanaged),
-		overTimeResolution,
-		overTimeUnit,
-		overTimeUnitName,
+		"doc/different-processing-time-unmanaged.svg",
+		measurements,
+		graphInterval,
+		graphTimeUnit,
+		graphTimeUnitName,
 	)
 }
 
 func createReadmeGraph(
 	t *testing.T,
 	fileName string,
-	measures []measurer.Measure,
-	overTimeResolution time.Duration,
-	overTimeUnit time.Duration,
-	overTimeUnitName string,
+	measurements []measuring.Measure,
+	graphInterval time.Duration,
+	graphTimeUnit time.Duration,
+	graphTimeUnitName string,
 ) {
-	received := research.FilterByKind(measures, measurer.MeasureKindReceived)
-	researched := research.CalcDataQuantity(received, overTimeResolution)
+	received := slices.DeleteFunc(slices.Clone(measurements), measuring.KeepReceived)
+	researched := research.QuantityPerInterval(received, graphInterval)
 
 	serieses := make([]chart.Series, 0, len(researched))
 	priorities := make([]uint, 0, len(researched))
@@ -118,19 +121,19 @@ func createReadmeGraph(
 	}
 
 	// To keep the legends in the same order
-	slices.SortFunc(priorities, priolist.Compare)
+	slices.SortFunc(priorities, Compare)
 
 	for _, priority := range priorities {
 		xaxis := make([]float64, len(researched[priority]))
 		yaxis := make([]float64, len(researched[priority]))
 
 		for id, item := range researched[priority] {
-			xaxis[id] = float64(item.RelativeTime) / float64(overTimeUnit)
+			xaxis[id] = float64(item.Time) / float64(graphTimeUnit)
 			yaxis[id] = float64(item.Quantity)
 		}
 
 		series := chart.ContinuousSeries{
-			Name:    fmt.Sprintf("Data with priority %d", priority),
+			Name:    fmt.Sprintf("Data of priority %d", priority),
 			XValues: xaxis,
 			YValues: yaxis,
 			Style:   chart.Style{StrokeWidth: 4},
@@ -140,7 +143,7 @@ func createReadmeGraph(
 	}
 
 	graph := chart.Chart{
-		Title:        "Data retrieval graph",
+		Title:        "Graph of data receiving",
 		ColorPalette: readmeColorPalette{},
 		Background: chart.Style{
 			Padding: chart.Box{
@@ -153,10 +156,10 @@ func createReadmeGraph(
 			FillColor: chart.ColorTransparent,
 		},
 		XAxis: chart.XAxis{
-			Name: "Time, " + overTimeUnitName,
+			Name: "Time, " + graphTimeUnitName,
 		},
 		YAxis: chart.YAxis{
-			Name: "Quantity of data received by handlers, pieces",
+			Name: "Quantity of data items received by handlers, pieces",
 		},
 		Series: serieses,
 	}

@@ -1,5 +1,5 @@
-// Discipline that is used to limits the speed of passing data elements from the
-// input channel to the output channel.
+// Discipline used to limit the speed of passing data items from the input channel to
+// the output channel.
 package limit
 
 import (
@@ -13,14 +13,13 @@ var (
 
 // Options of the created discipline.
 type Opts[Type any] struct {
-	// Input data channel. For terminate discipline it is necessary and sufficient to
-	// close the input channel. Preferably input channel should be buffered for
-	// performance reasons. Optimal capacity is in the range of 1e2 to 1e6 and
-	// should be determined using benchmarks
+	// Input channel of data items. For terminate the discipline it is necessary and
+	// sufficient to close the input channel. Preferably input channel should be
+	// buffered for performance reasons. Optimal capacity is in the range of 1e2 to 1e6
 	//
-	// Note that if the number of data elements written to the input channel before it
+	// Note that if the quantity of data items written to the input channel before it
 	// is closed is a multiple of the Quantity field in the rate limit structure, the
-	// discipline will still perform a delay after the last data element is transmitted.
+	// discipline will still perform a delay after the last data item is transmitted.
 	// This, with large values ​​of the Interval field in the rate limit structure, will
 	// result in a long discipline completion time
 	Input <-chan Type

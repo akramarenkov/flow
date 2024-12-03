@@ -4,7 +4,6 @@ package research
 import (
 	"math"
 	"slices"
-	"sort"
 	"strconv"
 	"time"
 
@@ -14,54 +13,55 @@ import (
 	chartsopts "github.com/go-echarts/go-echarts/v2/opts"
 )
 
-func CalcIntervalQuantities(
-	relativeTimes []time.Duration,
-	intervalsQuantity int,
+func QuantityPerInterval(
+	times []time.Duration,
+	intervalsNumber int,
 	interval time.Duration,
-) ([]qot.QOT, time.Duration) {
-	if len(relativeTimes) == 0 {
+) ([]qot.QoT, time.Duration) {
+	if len(times) == 0 {
 		return nil, 0
 	}
 
-	slices.Sort(relativeTimes)
+	slices.Sort(times)
 
-	maxRelativeTime := relativeTimes[len(relativeTimes)-1]
+	maxTime := times[len(times)-1]
 
 	if interval == 0 {
-		if intervalsQuantity == 0 {
+		if intervalsNumber == 0 {
 			return nil, 0
 		}
 
-		// It is necessary that max relative time falls into the last span,
+		// It is necessary that max time falls into the last span,
 		// so the interval is rounded up
-		interval = time.Duration(math.Ceil(float64(maxRelativeTime) / float64(intervalsQuantity)))
+		interval = time.Duration(math.Ceil(float64(maxTime) / float64(intervalsNumber)))
 
-		maxRelativeTimesRecalculated := interval * time.Duration(intervalsQuantity)
+		maxTimeRecalculated := interval * time.Duration(intervalsNumber)
 
-		// If max relative time is divided entirely, then add one nanosecond
+		// If max time is divided entirely, then add one nanosecond
 		// so that it falls into the last span
-		if maxRelativeTimesRecalculated == maxRelativeTime {
+		if maxTimeRecalculated == maxTime {
 			interval += time.Nanosecond
 		}
 	} else {
-		// Intervals quantity always turns out to be more by one
-		// Due to rounding down during integer division and, if max relative
-		// time is divided entirely, due to the fact that the span takes
-		// into account elements strictly smaller than it
-		intervalsQuantity = int(maxRelativeTime/interval) + 1
+		// Number of intervals always turns out to be more by one
+		//
+		// Due to rounding down during integer division and, if max time is divided
+		// entirely, due to the fact that the span takes into account elements
+		// strictly smaller than it
+		intervalsNumber = int(maxTime/interval) + 1
 	}
 
-	quantities := make([]qot.QOT, 0, intervalsQuantity)
+	quantities := make([]qot.QoT, 0, intervalsNumber)
 
 	edge := 0
 
-	// Interval is added to max span value to be sure that max relative time falls
+	// Interval is added to max span value to be sure that max time falls
 	// into the last span
-	for span := interval; span <= maxRelativeTime+interval; span += interval {
+	for span := interval; span <= maxTime+interval; span += interval {
 		spanQuantities := uint(0)
 
-		for id, relativeTime := range relativeTimes[edge:] {
-			if relativeTime >= span {
+		for id, time := range times[edge:] {
+			if time >= span {
 				edge += id
 				break
 			}
@@ -69,26 +69,26 @@ func CalcIntervalQuantities(
 			spanQuantities++
 
 			// Prevent use of data from the last slice for spans
-			// greater than max relative time + interval
-			if id == len(relativeTimes[edge:])-1 {
+			// greater than max time + interval
+			if id == len(times[edge:])-1 {
 				edge += id + 1
 			}
 		}
 
-		item := qot.QOT{
-			Quantity:     spanQuantities,
-			RelativeTime: span - interval,
+		item := qot.QoT{
+			Quantity: spanQuantities,
+			Time:     span - interval,
 		}
 
 		quantities = append(quantities, item)
 	}
 
 	// Padding with zero values ​​in case intervals quantity multiplied by
-	// interval is greater than max relative time
-	for addition := range intervalsQuantity - len(quantities) {
-		item := qot.QOT{
-			Quantity:     0,
-			RelativeTime: maxRelativeTime + interval*time.Duration(addition+1),
+	// interval is greater than max time
+	for addition := range intervalsNumber - len(quantities) {
+		item := qot.QoT{
+			Quantity: 0,
+			Time:     maxTime + interval*time.Duration(addition+1),
 		}
 
 		quantities = append(quantities, item)
@@ -97,17 +97,15 @@ func CalcIntervalQuantities(
 	return quantities, interval
 }
 
-func ConvertQuantityOverTimeToBarEcharts(
-	quantities []qot.QOT,
-) ([]chartsopts.BarData, []int) {
+func QotToBarChart(quantities []qot.QoT) ([]chartsopts.BarData, []int) {
 	serieses := make([]chartsopts.BarData, 0, len(quantities))
 	xaxis := make([]int, 0, len(quantities))
 
 	for id, quantity := range quantities {
 		item := chartsopts.BarData{
-			Name: quantity.RelativeTime.String(),
+			Name: quantity.Time.String(),
 			Tooltip: &chartsopts.Tooltip{
-				Show: true,
+				Show: chartsopts.Bool(true),
 			},
 			Value: quantity.Quantity,
 		}
@@ -119,10 +117,7 @@ func ConvertQuantityOverTimeToBarEcharts(
 	return serieses, xaxis
 }
 
-func CalcRelativeDeviations(
-	relativeTimes []time.Duration,
-	expected time.Duration,
-) map[int]int {
+func Deviations(times []time.Duration, expected time.Duration) map[int]int {
 	const (
 		deviationsMin = -100
 		deviationsMax = 100
@@ -130,14 +125,14 @@ func CalcRelativeDeviations(
 		deviationsLength = deviationsMax - deviationsMin + 1
 	)
 
-	if len(relativeTimes) == 0 {
+	if len(times) == 0 {
 		return nil
 	}
 
-	slices.Sort(relativeTimes)
+	slices.Sort(times)
 
 	// Used to fix false positive remark by gosec linter
-	first := relativeTimes[0]
+	first := times[0]
 
 	deviations := make(map[int]int, deviationsLength)
 
@@ -163,20 +158,18 @@ func CalcRelativeDeviations(
 
 	calc(first, 0)
 
-	for id := range relativeTimes {
-		if id == len(relativeTimes)-1 {
+	for id := range times {
+		if id == len(times)-1 {
 			break
 		}
 
-		calc(relativeTimes[id+1], relativeTimes[id])
+		calc(times[id+1], times[id])
 	}
 
 	return deviations
 }
 
-func ConvertRelativeDeviationsToBarEcharts(
-	deviations map[int]int,
-) ([]chartsopts.BarData, []int) {
+func DeviationsToBarChart(deviations map[int]int) ([]chartsopts.BarData, []int) {
 	serieses := make([]chartsopts.BarData, 0, len(deviations))
 	xaxis := make([]int, 0, len(deviations))
 
@@ -184,13 +177,13 @@ func ConvertRelativeDeviationsToBarEcharts(
 		xaxis = append(xaxis, percent)
 	}
 
-	sort.Ints(xaxis)
+	slices.Sort(xaxis)
 
 	for _, percent := range xaxis {
 		item := chartsopts.BarData{
 			Name: strconv.Itoa(percent) + "%",
 			Tooltip: &chartsopts.Tooltip{
-				Show: true,
+				Show: chartsopts.Bool(true),
 			},
 			Value: deviations[percent],
 		}
@@ -201,14 +194,10 @@ func ConvertRelativeDeviationsToBarEcharts(
 	return serieses, xaxis
 }
 
-func CalcTotalDuration(durations []time.Duration) time.Duration {
+func TotalDuration(durations []time.Duration) time.Duration {
 	if len(durations) == 0 {
 		return 0
 	}
 
-	copied := slices.Clone(durations)
-
-	slices.Sort(copied)
-
-	return copied[len(copied)-1]
+	return slices.Max(durations)
 }

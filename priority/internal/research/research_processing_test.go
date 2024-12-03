@@ -5,196 +5,115 @@ import (
 	"time"
 
 	"github.com/akramarenkov/flow/internal/qot"
-	"github.com/akramarenkov/flow/priority/internal/measurer"
+	"github.com/akramarenkov/flow/priority/internal/measuring"
 
 	"github.com/stretchr/testify/require"
 )
 
-func TestCalcInProcessing(t *testing.T) {
-	measures := []measurer.Measure{
+func TestInProcessing(t *testing.T) {
+	measurements := []measuring.Measure{
 		{
-			Data:         0,
-			Kind:         measurer.MeasureKindCompleted,
-			Priority:     1,
-			RelativeTime: 11 * time.Microsecond,
+			Item:     0,
+			Kind:     measuring.KindCompleted,
+			Priority: 1,
+			Time:     11 * time.Microsecond,
 		},
 		{
-			Data:         0,
-			Kind:         measurer.MeasureKindProcessed,
-			Priority:     1,
-			RelativeTime: 10 * time.Microsecond,
+			Item:     0,
+			Kind:     measuring.KindProcessed,
+			Priority: 1,
+			Time:     10 * time.Microsecond,
 		},
 		{
-			Data:         0,
-			Kind:         measurer.MeasureKindReceived,
-			Priority:     1,
-			RelativeTime: 0,
+			Item:     0,
+			Kind:     measuring.KindReceived,
+			Priority: 1,
+			Time:     0,
 		},
 		{
-			Data:         1,
-			Kind:         measurer.MeasureKindCompleted,
-			Priority:     2,
-			RelativeTime: 25 * time.Microsecond,
+			Item:     1,
+			Kind:     measuring.KindCompleted,
+			Priority: 2,
+			Time:     25 * time.Microsecond,
 		},
 		{
-			Data:         1,
-			Kind:         measurer.MeasureKindProcessed,
-			Priority:     2,
-			RelativeTime: 20 * time.Microsecond,
+			Item:     1,
+			Kind:     measuring.KindProcessed,
+			Priority: 2,
+			Time:     20 * time.Microsecond,
 		},
 		{
-			Data:         1,
-			Kind:         measurer.MeasureKindReceived,
-			Priority:     2,
-			RelativeTime: time.Microsecond,
+			Item:     1,
+			Kind:     measuring.KindReceived,
+			Priority: 2,
+			Time:     time.Microsecond,
 		},
 		{
-			Data:         2,
-			Kind:         measurer.MeasureKindProcessed,
-			Priority:     3,
-			RelativeTime: 30 * time.Microsecond,
+			Item:     2,
+			Kind:     measuring.KindProcessed,
+			Priority: 3,
+			Time:     30 * time.Microsecond,
 		},
 		{
-			Data:         2,
-			Kind:         measurer.MeasureKindCompleted,
-			Priority:     3,
-			RelativeTime: 33 * time.Microsecond,
+			Item:     2,
+			Kind:     measuring.KindCompleted,
+			Priority: 3,
+			Time:     33 * time.Microsecond,
 		},
 		{
-			Data:         2,
-			Kind:         measurer.MeasureKindReceived,
-			Priority:     3,
-			RelativeTime: 0,
+			Item:     2,
+			Kind:     measuring.KindReceived,
+			Priority: 3,
+			Time:     0,
 		},
 	}
 
-	resolution := 5 * time.Microsecond
+	interval := 5 * time.Microsecond
 
-	expected := map[uint][]qot.QOT{
+	expected := map[uint][]qot.QoT{
 		1: {
-			{
-				RelativeTime: -resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 0,
-				Quantity:     1,
-			},
-			{
-				RelativeTime: resolution,
-				Quantity:     1,
-			},
-			{
-				RelativeTime: 2 * resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 3 * resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 4 * resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 5 * resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 6 * resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 7 * resolution,
-				Quantity:     0,
-			},
+			{Quantity: 0, Time: -interval},
+			{Quantity: 1, Time: 0},
+			{Quantity: 1, Time: interval},
+			{Quantity: 0, Time: 2 * interval},
+			{Quantity: 0, Time: 3 * interval},
+			{Quantity: 0, Time: 4 * interval},
+			{Quantity: 0, Time: 5 * interval},
+			{Quantity: 0, Time: 6 * interval},
+			{Quantity: 0, Time: 7 * interval},
 		},
 		2: {
-			{
-				RelativeTime: -resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 0,
-				Quantity:     1,
-			},
-			{
-				RelativeTime: resolution,
-				Quantity:     1,
-			},
-			{
-				RelativeTime: 2 * resolution,
-				Quantity:     1,
-			},
-			{
-				RelativeTime: 3 * resolution,
-				Quantity:     1,
-			},
-			{
-				RelativeTime: 4 * resolution,
-				Quantity:     1,
-			},
-			{
-				RelativeTime: 5 * resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 6 * resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 7 * resolution,
-				Quantity:     0,
-			},
+			{Quantity: 0, Time: -interval},
+			{Quantity: 1, Time: 0},
+			{Quantity: 1, Time: interval},
+			{Quantity: 1, Time: 2 * interval},
+			{Quantity: 1, Time: 3 * interval},
+			{Quantity: 1, Time: 4 * interval},
+			{Quantity: 0, Time: 5 * interval},
+			{Quantity: 0, Time: 6 * interval},
+			{Quantity: 0, Time: 7 * interval},
 		},
 		3: {
-			{
-				RelativeTime: -resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 0,
-				Quantity:     1,
-			},
-			{
-				RelativeTime: resolution,
-				Quantity:     1,
-			},
-			{
-				RelativeTime: 2 * resolution,
-				Quantity:     1,
-			},
-			{
-				RelativeTime: 3 * resolution,
-				Quantity:     1,
-			},
-			{
-				RelativeTime: 4 * resolution,
-				Quantity:     1,
-			},
-			{
-				RelativeTime: 5 * resolution,
-				Quantity:     1,
-			},
-			{
-				RelativeTime: 6 * resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 7 * resolution,
-				Quantity:     0,
-			},
+			{Quantity: 0, Time: -interval},
+			{Quantity: 1, Time: 0},
+			{Quantity: 1, Time: interval},
+			{Quantity: 1, Time: 2 * interval},
+			{Quantity: 1, Time: 3 * interval},
+			{Quantity: 1, Time: 4 * interval},
+			{Quantity: 1, Time: 5 * interval},
+			{Quantity: 0, Time: 6 * interval},
+			{Quantity: 0, Time: 7 * interval},
 		},
 	}
 
-	quantities := CalcInProcessing(measures, resolution)
+	quantities := InProcessing(measurements, interval)
 	require.Equal(t, expected, quantities)
 }
 
-func TestCalcInProcessingZeroInput(t *testing.T) {
-	quantities := CalcInProcessing(nil, 5*time.Microsecond)
-	require.Equal(t, map[uint][]qot.QOT(nil), quantities)
+func TestInProcessingZeroInput(t *testing.T) {
+	quantities := InProcessing(nil, 5*time.Microsecond)
+	require.Equal(t, map[uint][]qot.QoT(nil), quantities)
 
-	quantities = CalcInProcessing([]measurer.Measure{}, 5*time.Microsecond)
-	require.Equal(t, map[uint][]qot.QOT(nil), quantities)
+	quantities = InProcessing([]measuring.Measure{}, 5*time.Microsecond)
+	require.Equal(t, map[uint][]qot.QoT(nil), quantities)
 }

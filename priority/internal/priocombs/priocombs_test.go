@@ -13,32 +13,32 @@ import (
 func TestQuantity(t *testing.T) {
 	require.Equal(t, uint64(0), Quantity(nil).Uint64())
 	require.Equal(t, uint64(0), Quantity([]uint{}).Uint64())
-	require.Equal(t, uint64(1), Quantity(seq.Int[uint](1, 1)).Uint64())
-	require.Equal(t, uint64(3), Quantity(seq.Int[uint](2, 1)).Uint64())
-	require.Equal(t, uint64(7), Quantity(seq.Int[uint](3, 1)).Uint64())
-	require.Equal(t, uint64(15), Quantity(seq.Int[uint](4, 1)).Uint64())
-	require.Equal(t, uint64(31), Quantity(seq.Int[uint](5, 1)).Uint64())
-	require.Equal(t, uint64(63), Quantity(seq.Int[uint](6, 1)).Uint64())
-	require.Equal(t, uint64(127), Quantity(seq.Int[uint](7, 1)).Uint64())
-	require.Equal(t, uint64(255), Quantity(seq.Int[uint](8, 1)).Uint64())
-	require.Equal(t, uint64(511), Quantity(seq.Int[uint](9, 1)).Uint64())
+	require.Equal(t, uint64(1), Quantity(seq.Linear[uint](1, 1)).Uint64())
+	require.Equal(t, uint64(3), Quantity(seq.Linear[uint](2, 1)).Uint64())
+	require.Equal(t, uint64(7), Quantity(seq.Linear[uint](3, 1)).Uint64())
+	require.Equal(t, uint64(15), Quantity(seq.Linear[uint](4, 1)).Uint64())
+	require.Equal(t, uint64(31), Quantity(seq.Linear[uint](5, 1)).Uint64())
+	require.Equal(t, uint64(63), Quantity(seq.Linear[uint](6, 1)).Uint64())
+	require.Equal(t, uint64(127), Quantity(seq.Linear[uint](7, 1)).Uint64())
+	require.Equal(t, uint64(255), Quantity(seq.Linear[uint](8, 1)).Uint64())
+	require.Equal(t, uint64(511), Quantity(seq.Linear[uint](9, 1)).Uint64())
 }
 
 func TestSize(t *testing.T) {
 	require.Equal(t, uint64(0), Size(nil))
 	require.Equal(t, uint64(0), Size([]uint{}))
-	require.Equal(t, uint64(1), Size(seq.Int[uint](1, 1)))
-	require.Equal(t, uint64(3), Size(seq.Int[uint](2, 1)))
-	require.Equal(t, uint64(7), Size(seq.Int[uint](3, 1)))
-	require.Equal(t, uint64(15), Size(seq.Int[uint](4, 1)))
-	require.Equal(t, uint64(31), Size(seq.Int[uint](5, 1)))
-	require.Equal(t, uint64(63), Size(seq.Int[uint](6, 1)))
-	require.Equal(t, uint64(127), Size(seq.Int[uint](7, 1)))
-	require.Equal(t, uint64(255), Size(seq.Int[uint](8, 1)))
-	require.Equal(t, uint64(511), Size(seq.Int[uint](9, 1)))
+	require.Equal(t, uint64(1), Size(seq.Linear[uint](1, 1)))
+	require.Equal(t, uint64(3), Size(seq.Linear[uint](2, 1)))
+	require.Equal(t, uint64(7), Size(seq.Linear[uint](3, 1)))
+	require.Equal(t, uint64(15), Size(seq.Linear[uint](4, 1)))
+	require.Equal(t, uint64(31), Size(seq.Linear[uint](5, 1)))
+	require.Equal(t, uint64(63), Size(seq.Linear[uint](6, 1)))
+	require.Equal(t, uint64(127), Size(seq.Linear[uint](7, 1)))
+	require.Equal(t, uint64(255), Size(seq.Linear[uint](8, 1)))
+	require.Equal(t, uint64(511), Size(seq.Linear[uint](9, 1)))
 
-	require.Equal(t, uint64(1<<63-1), Size(seq.Int[uint](63, 1)))
-	require.Equal(t, uint64(intspec.MaxUint64), Size(seq.Int[uint](64, 1)))
+	require.Equal(t, uint64(1<<63-1), Size(seq.Linear[uint](63, 1)))
+	require.Equal(t, uint64(intspec.MaxUint64), Size(seq.Linear[uint](64, 1)))
 }
 
 func TestIterZero(t *testing.T) {
@@ -53,7 +53,7 @@ func TestIter1(t *testing.T) {
 		{1},
 	}
 
-	testIter(t, seq.Int[uint](1, 1), expected)
+	testIter(t, seq.Linear[uint](1, 1), expected)
 }
 
 func TestIter21(t *testing.T) {
@@ -63,7 +63,7 @@ func TestIter21(t *testing.T) {
 		{2, 1},
 	}
 
-	testIter(t, seq.Int[uint](2, 1), expected)
+	testIter(t, seq.Linear[uint](2, 1), expected)
 }
 
 func TestIter321(t *testing.T) {
@@ -77,7 +77,7 @@ func TestIter321(t *testing.T) {
 		{3, 2, 1},
 	}
 
-	testIter(t, seq.Int[uint](3, 1), expected)
+	testIter(t, seq.Linear[uint](3, 1), expected)
 }
 
 func TestIter4321(t *testing.T) {
@@ -99,7 +99,7 @@ func TestIter4321(t *testing.T) {
 		{4, 3, 2, 1},
 	}
 
-	testIter(t, seq.Int[uint](4, 1), expected)
+	testIter(t, seq.Linear[uint](4, 1), expected)
 }
 
 func TestIter54321(t *testing.T) {
@@ -137,7 +137,7 @@ func TestIter54321(t *testing.T) {
 		{5, 4, 3, 2, 1},
 	}
 
-	testIter(t, seq.Int[uint](5, 1), expected)
+	testIter(t, seq.Linear[uint](5, 1), expected)
 }
 
 func TestIter702010(t *testing.T) {
@@ -165,7 +165,7 @@ func testIter(t *testing.T, priorities []uint, expected [][]uint) {
 }
 
 func TestIterPartial(t *testing.T) {
-	priorities := seq.Int[uint](15, 1)
+	priorities := seq.Linear[uint](15, 1)
 
 	for combination := range Iter(priorities) {
 		if len(combination) == 1 {
@@ -177,7 +177,7 @@ func TestIterPartial(t *testing.T) {
 }
 
 func TestIterSize(t *testing.T) {
-	priorities := seq.Int[uint](15, 1)
+	priorities := seq.Linear[uint](15, 1)
 
 	size := uint64(0)
 
@@ -189,7 +189,7 @@ func TestIterSize(t *testing.T) {
 }
 
 func TestIterCombinationDecreasing(t *testing.T) {
-	priorities := seq.Int[uint](15, 1)
+	priorities := seq.Linear[uint](15, 1)
 
 	for combination := range Iter(priorities) {
 		require.IsDecreasing(t, combination, "combination: %v", combination)
@@ -197,7 +197,7 @@ func TestIterCombinationDecreasing(t *testing.T) {
 }
 
 func BenchmarkQuantity(b *testing.B) {
-	priorities := seq.Int[uint](15, 1)
+	priorities := seq.Linear[uint](15, 1)
 
 	b.ResetTimer()
 
@@ -211,7 +211,7 @@ func BenchmarkQuantity(b *testing.B) {
 }
 
 func BenchmarkSize(b *testing.B) {
-	priorities := seq.Int[uint](15, 1)
+	priorities := seq.Linear[uint](15, 1)
 
 	b.ResetTimer()
 
@@ -225,7 +225,7 @@ func BenchmarkSize(b *testing.B) {
 }
 
 func BenchmarkIter(b *testing.B) {
-	priorities := seq.Int[uint](15, 1)
+	priorities := seq.Linear[uint](15, 1)
 
 	b.ResetTimer()
 

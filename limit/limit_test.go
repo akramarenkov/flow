@@ -34,15 +34,17 @@ func TestOptsValidation(t *testing.T) {
 }
 
 func TestDiscipline(t *testing.T) {
-	quantity := 10000
-
 	limit := Rate{
 		Interval: time.Second,
 		Quantity: 1000,
 	}
 
-	duration := testDiscipline(t, quantity, limit)
-	expected := calcExpectedDuration(t, quantity, limit)
+	duration := testDiscipline(t, 10000, limit)
+	expected := expectedDuration(t, 10000, limit)
+	require.InEpsilon(t, expected, duration, 0.1)
+
+	duration = testDiscipline(t, 9999, limit)
+	expected = expectedDuration(t, 9999, limit)
 	require.InEpsilon(t, expected, duration, 0.1)
 }
 
@@ -57,7 +59,7 @@ func testDiscipline(t *testing.T, quantity int, limit Rate) time.Duration {
 	discipline, err := New(opts)
 	require.NoError(t, err)
 
-	inSequence := make([]int, 0, quantity)
+	inpSequence := make([]int, 0, quantity)
 	outSequence := make([]int, 0, quantity)
 
 	startedAt := time.Now()
@@ -66,7 +68,7 @@ func testDiscipline(t *testing.T, quantity int, limit Rate) time.Duration {
 		defer close(input)
 
 		for item := range quantity {
-			inSequence = append(inSequence, item)
+			inpSequence = append(inpSequence, item)
 
 			input <- item
 		}
@@ -78,21 +80,21 @@ func testDiscipline(t *testing.T, quantity int, limit Rate) time.Duration {
 
 	duration := time.Since(startedAt)
 
-	require.Equal(t, inSequence, outSequence)
+	require.Equal(t, inpSequence, outSequence)
+	require.Len(t, outSequence, quantity)
 
 	return duration
 }
 
-func calcExpectedDuration(t *testing.T, quantity int, limit Rate) time.Duration {
-	inputQuantity, err := safe.IToI[time.Duration](quantity)
-	require.NoError(t, err)
+func expectedDuration(t *testing.T, quantity int, limit Rate) time.Duration {
+	inputQuantity := time.Duration(quantity)
 
 	limitQuantity, err := safe.IToI[time.Duration](limit.Quantity)
 	require.NoError(t, err)
 
 	// Accuracy of calculations is deliberately roughened (first division is performed
 	// and only then multiplication) because such a calculation corresponds to the work
-	// of the discipline when closing the input channel: if the number of data elements
+	// of the discipline when closing the input channel: if the quantity of data items
 	// written to the input channel is not a multiple of the Quantity field in rate
 	// limit structure, then the delay after the transmission of the last data is not
 	// performed
@@ -106,7 +108,7 @@ func BenchmarkDisciplineInputCapacity0(b *testing.B) {
 }
 
 func BenchmarkDisciplineInputCapacity1e0(b *testing.B) {
-	benchmarkDisciplineInputCapacity(b, 1)
+	benchmarkDisciplineInputCapacity(b, 1e0)
 }
 
 func BenchmarkDisciplineInputCapacity1e1(b *testing.B) {
@@ -143,12 +145,12 @@ func BenchmarkDisciplineInputCapacityQuantity(b *testing.B) {
 
 // This benchmark is used to test the impact of input channel capacity on
 // performance. Therefore, the value of Quantity field in rate limit structure is
-// always set to be greater than the number of data elements written to the input
+// always set to be greater than the quantity of data items written to the input
 // channel so that there is no delay after data transfer.
 func benchmarkDisciplineInputCapacity(b *testing.B, capacity int) {
 	quantity := b.N
 
-	limitQuantity, err := safe.IToI[uint64](b.N)
+	limitQuantity, err := safe.IToI[uint64](quantity)
 	require.NoError(b, err)
 
 	limit := Rate{
@@ -185,9 +187,9 @@ func benchmarkDisciplineInputCapacity(b *testing.B, capacity int) {
 	}
 }
 
-// Here we model the worst case: when the number of operations for measuring time and
-// calculating delays is equal to the number of operations for transmitting data
-// elements.
+// Here we model the worst case: when the quantity of operations for measuring time and
+// calculating delays is equal to the quantity of operations for transmitting data
+// items.
 func BenchmarkDiscipline(b *testing.B) {
 	quantity := b.N
 
@@ -196,7 +198,7 @@ func BenchmarkDiscipline(b *testing.B) {
 		Quantity: 1,
 	}
 
-	input := make(chan int, b.N)
+	input := make(chan int, quantity)
 
 	opts := Opts[int]{
 		Input: input,

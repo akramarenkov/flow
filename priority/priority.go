@@ -1,75 +1,72 @@
-// Discipline that used to distributes data among handlers according to priority.
+// Discipline used to distribute data items between handlers in quantity
+// corresponding to the priority of the data items.
 package priority
 
 import (
-	"errors"
 	"slices"
 	"time"
 
-	"github.com/akramarenkov/flow/internal/general"
-	"github.com/akramarenkov/flow/priority/divider"
 	"github.com/akramarenkov/flow/priority/internal/distrib"
-	"github.com/akramarenkov/flow/priority/internal/input"
-	"github.com/akramarenkov/flow/priority/priolist"
 	"github.com/akramarenkov/flow/priority/types"
 )
 
-var (
-	ErrDividerEmpty             = errors.New("priorities divider was not specified")
-	ErrHandlersQuantityTooSmall = errors.New("handlers quantity is too small")
-	ErrHandlersQuantityZero     = errors.New("handlers quantity is zero")
-	ErrInputEmpty               = errors.New("input channels was not specified")
-)
-
 const (
-	defaultFeedbackLimitDivider = 10
-	defaultIdleDelay            = 1 * time.Nanosecond
-	defaultInterruptTimeout     = 1 * time.Nanosecond
+	defaultIdleDelay = 1 * time.Nanosecond
 )
 
 // Options of the created discipline.
 type Opts[Type any] struct {
-	// Determines how handlers are distributed among priorities
-	Divider divider.Divider
-	// Between how many handlers you need to distribute data
+	// Determines in what quantity data items distributed among data handlers
+	//
+	// For equaling use divider.Fair divider, for prioritization use divider.Rate
+	// divider or custom divider
+	Divider types.Divider
+	// Quantity of data handlers between which data items are distributed
 	HandlersQuantity uint
-	// Channels with input data, should be buffered for performance reasons
+	// Input channels of data items. For terminate the discipline it is necessary and
+	// sufficient to close all input channels. Preferably input channels should be
+	// buffered for performance reasons. Optimal capacity is in the range of 1 to 3
+	// times of quantity of data handlers
+	//
 	// Map key is a value of priority
-	// For terminate discipline it is necessary and sufficient to close all input channels
 	Inputs map[uint]<-chan Type
 }
 
-// Prioritization discipline.
-//
-// Preferably input channels should be buffered for performance reasons.
-//
-// Data from input channels passed to handlers by output channel.
-//
-// Handlers must call Release() method after the current data item has been processed.
-//
-// For equaling use divider.Fair divider, for prioritization use divider.Rate divider or
-// custom divider.
-type Discipline[Type any] struct {
-	opts Opts[Type]
+// Adds an input channel with the specified priority to the inputs map.
+func (opts *Opts[Type]) AddInput(priority uint, channel <-chan Type) error {
+	if priority == 0 {
+		return ErrPriorityZero
+	}
 
-	feedback chan uint
-	inputs   map[uint]input.Input[Type]
-	output   chan types.Prioritized[Type]
+	if channel == nil {
+		return ErrInputEmpty
+	}
 
-	priorities []uint
+	if opts.Inputs == nil {
+		opts.Inputs = make(map[uint]<-chan Type)
+	}
 
-	actual    map[uint]uint
-	strategic map[uint]uint
-	tactic    map[uint]uint
+	if stored := opts.Inputs[priority]; stored != nil {
+		return ErrInputExists
+	}
 
-	uncrowded []uint
-	useful    []uint
+	opts.Inputs[priority] = channel
 
-	feedbackLimit uint
+	return nil
+}
 
-	interrupter *time.Ticker
+func (opts Opts[Type]) isInputEmpty() error {
+	if len(opts.Inputs) == 0 {
+		return ErrInputEmpty
+	}
 
-	err chan error
+	for _, channel := range opts.Inputs {
+		if channel == nil {
+			return ErrInputEmpty
+		}
+	}
+
+	return nil
 }
 
 func (opts Opts[Type]) isValid() error {
@@ -81,11 +78,63 @@ func (opts Opts[Type]) isValid() error {
 		return ErrHandlersQuantityZero
 	}
 
-	if len(opts.Inputs) == 0 {
-		return ErrInputEmpty
+	if err := opts.isInputEmpty(); err != nil {
+		return err
+	}
+
+	if channel := opts.Inputs[0]; channel != nil {
+		return ErrPriorityZero
 	}
 
 	return nil
+}
+
+func (opts Opts[Type]) disciplineInputs() map[uint]input[Type] {
+	inputs := make(map[uint]input[Type], len(opts.Inputs))
+
+	for priority, channel := range opts.Inputs {
+		input := input[Type]{
+			Channel: channel,
+		}
+
+		inputs[priority] = input
+	}
+
+	return inputs
+}
+
+// Priority discipline.
+type Discipline[Type any] struct {
+	opts Opts[Type]
+
+	inputs  map[uint]input[Type]
+	output  chan types.Prioritized[Type]
+	release chan uint
+
+	// priority list corresponding to all input channels - main priority list
+	priorities []uint
+	// priority list whose actual distribution did not reach strategic
+	unachieved []uint
+	// priority list whose actual distribution did not reach operative
+	unreached []uint
+	// priority list from whose channels it managed to get all data items at
+	// ​​input/output stage for priorities from the unachieved list and, since the
+	// unachieved list may not be complete with respect to the main priority list
+	// then, at any previous input/output stages - interim main priority list
+	useful []uint
+
+	// actual distribution of data items by priorities
+	actual map[uint]uint
+	// distribution of data items filled by useful priority list and total quantity of
+	// data handlers - interim strategic distribution
+	operative map[uint]uint
+	// distribution of data items filled by main priority list and total quantity of
+	// data handlers
+	strategic map[uint]uint
+	// distribution on whose quantities ​​input/output is performed
+	tactic map[uint]uint
+
+	err chan error
 }
 
 // Creates and runs discipline.
@@ -93,12 +142,6 @@ func New[Type any](opts Opts[Type]) (*Discipline[Type], error) {
 	if err := opts.isValid(); err != nil {
 		return nil, err
 	}
-
-	feedbackLimit := general.DivideWithMin(
-		opts.HandlersQuantity,
-		defaultFeedbackLimitDivider,
-		uint(len(opts.Inputs)),
-	)
 
 	inputs, priorities, strategic, err := prepare(opts)
 	if err != nil {
@@ -108,19 +151,16 @@ func New[Type any](opts Opts[Type]) (*Discipline[Type], error) {
 	dsc := &Discipline[Type]{
 		opts: opts,
 
-		feedback: make(chan uint, opts.HandlersQuantity),
-		inputs:   inputs,
-		output:   make(chan types.Prioritized[Type], opts.HandlersQuantity),
+		inputs:  inputs,
+		output:  make(chan types.Prioritized[Type], opts.HandlersQuantity),
+		release: make(chan uint, opts.HandlersQuantity),
 
 		priorities: priorities,
 
 		actual:    make(map[uint]uint),
+		operative: make(map[uint]uint),
 		strategic: strategic,
 		tactic:    make(map[uint]uint),
-
-		feedbackLimit: feedbackLimit,
-
-		interrupter: time.NewTicker(defaultInterruptTimeout),
 
 		err: make(chan error, 1),
 	}
@@ -131,38 +171,28 @@ func New[Type any](opts Opts[Type]) (*Discipline[Type], error) {
 }
 
 func prepare[Type any](opts Opts[Type]) (
-	map[uint]input.Input[Type],
+	map[uint]input[Type],
 	[]uint,
 	map[uint]uint,
 	error,
 ) {
-	inputs := make(map[uint]input.Input[Type])
-	priorities := make([]uint, 0)
-	strategic := make(map[uint]uint)
+	inputs := opts.disciplineInputs()
 
-	for priority, channel := range opts.Inputs {
-		input := input.Input[Type]{
-			Channel: channel,
-		}
+	priorities := make([]uint, 0, len(inputs))
+	strategic := make(map[uint]uint, len(inputs))
 
-		inputs[priority] = input
-
+	for priority := range inputs {
 		priorities = append(priorities, priority)
 	}
 
-	slices.SortFunc(priorities, priolist.Compare)
+	slices.SortFunc(priorities, Compare)
 
-	err := safeDivide(
-		opts.Divider,
-		priorities,
-		opts.HandlersQuantity,
-		strategic,
-	)
+	err := divide(opts.Divider, opts.HandlersQuantity, priorities, strategic)
 	if err != nil {
 		return nil, nil, nil, err
 	}
 
-	if !distrib.IsFilled(strategic) {
+	if !distrib.IsFilled(priorities, strategic) {
 		return nil, nil, nil, ErrHandlersQuantityTooSmall
 	}
 
@@ -176,20 +206,24 @@ func (dsc *Discipline[Type]) Output() <-chan types.Prioritized[Type] {
 	return dsc.output
 }
 
-// Marks that current data has been processed and handler is ready to receive new data.
+// Marks that current data item has been processed and handler is ready to receive new
+// data item.
+//
+// Handlers must call this method after the current data item has been processed.
 func (dsc *Discipline[Type]) Release(priority uint) {
-	dsc.feedback <- priority
+	dsc.release <- priority
 }
 
 // Returns a channel with errors. If an error occurs (the value from the channel
-// is not equal to nil) the discipline terminates its work. The most likely cause of
-// the error is an incorrectly working dividing function in which the sum of
-// the distributed quantities is not equal to the original quantity.
+// is not equal to nil) the discipline terminates its work.
 //
-// The single nil value means that the discipline has terminated in normal mode.
+// The single nil value means that the discipline has terminated in normal mode:
+// after closing and emptying all input channels.
 //
-// If you are sure that the divider is working correctly, then you don’t have to
-// read from this channel and you don’t have to check the received value.
+// The only place where the error can occurs is the divider. If you are sure that the
+// divider is working correctly and the configuration used will not cause an error
+// in it, then you are not obliged to read from this channel and you are not obliged
+// to check the received value.
 func (dsc *Discipline[Type]) Err() <-chan error {
 	return dsc.err
 }
@@ -197,8 +231,7 @@ func (dsc *Discipline[Type]) Err() <-chan error {
 func (dsc *Discipline[Type]) main() {
 	defer close(dsc.err)
 	defer close(dsc.output)
-	defer close(dsc.feedback)
-	defer dsc.interrupter.Stop()
+	defer close(dsc.release)
 
 	if err := dsc.loop(); err != nil {
 		dsc.err <- err
@@ -206,50 +239,35 @@ func (dsc *Discipline[Type]) main() {
 }
 
 func (dsc *Discipline[Type]) loop() error {
-	defer dsc.waitZeroActual()
+	defer dsc.waitFullReleased()
 
 	for {
-		processed, err := dsc.base()
+		distributed, err := dsc.distribute()
 		if err != nil {
 			return err
 		}
 
-		if processed == 0 {
-			if dsc.isDrainedInputs() {
+		dsc.collectReleases()
+
+		if distributed == 0 {
+			if dsc.isInputsClosed() {
 				return nil
 			}
 
 			time.Sleep(defaultIdleDelay)
 		}
-
-		dsc.getLimitedFeedback()
 	}
 }
 
-func (dsc *Discipline[Type]) waitZeroActual() {
-	for !dsc.isZeroActual() {
-		dsc.decreaseActual(<-dsc.feedback)
+func (dsc *Discipline[Type]) waitFullReleased() {
+	for !dsc.isFullyReleased() {
+		dsc.waitRelease()
 	}
 }
 
-func (dsc *Discipline[Type]) getOneFeedback() {
-	dsc.decreaseActual(<-dsc.feedback)
-}
-
-func (dsc *Discipline[Type]) getLimitedFeedback() {
-	for range dsc.feedbackLimit {
-		select {
-		case priority := <-dsc.feedback:
-			dsc.decreaseActual(priority)
-		default:
-			return
-		}
-	}
-}
-
-func (dsc *Discipline[Type]) isZeroActual() bool {
-	for _, quantity := range dsc.actual {
-		if quantity != 0 {
+func (dsc *Discipline[Type]) isFullyReleased() bool {
+	for _, priority := range dsc.priorities {
+		if dsc.actual[priority] != 0 {
 			return false
 		}
 	}
@@ -257,9 +275,19 @@ func (dsc *Discipline[Type]) isZeroActual() bool {
 	return true
 }
 
-func (dsc *Discipline[Type]) isDrainedInputs() bool {
+func (dsc *Discipline[Type]) collectReleases() {
+	for range len(dsc.release) {
+		dsc.waitRelease()
+	}
+}
+
+func (dsc *Discipline[Type]) waitRelease() {
+	dsc.actual[<-dsc.release]--
+}
+
+func (dsc *Discipline[Type]) isInputsClosed() bool {
 	for _, input := range dsc.inputs {
-		if !input.Drained {
+		if !input.Closed {
 			return false
 		}
 	}
@@ -267,284 +295,231 @@ func (dsc *Discipline[Type]) isDrainedInputs() bool {
 	return true
 }
 
-func (dsc *Discipline[Type]) base() (uint, error) {
-	processed := uint(0)
+func (dsc *Discipline[Type]) distribute() (uint, error) {
+	distributed := uint(0)
 
-	if err := dsc.waitCalcTactic(); err != nil {
-		return processed, err
+	if err := dsc.waitFillingUnachieved(); err != nil {
+		return distributed, err
 	}
 
-	processed += dsc.prioritize()
+	distributed += dsc.transfer(dsc.unachieved)
 
-	proceed, err := dsc.recalcTactic()
+	filled, err := dsc.fillOperative()
 	if err != nil {
-		return processed, err
+		return distributed, err
 	}
 
-	if !proceed {
-		return processed, nil
+	if !filled {
+		return distributed, nil
 	}
 
-	processed += dsc.prioritize()
+	if err := dsc.waitFillingUnreached(); err != nil {
+		return distributed, err
+	}
 
-	return processed, nil
+	distributed += dsc.transfer(dsc.unreached)
+
+	return distributed, nil
 }
 
-func (dsc *Discipline[Type]) waitCalcTactic() error {
+func (dsc *Discipline[Type]) waitFillingUnachieved() error {
 	for {
-		proceed, err := dsc.calcTactic()
+		filled, err := dsc.fillUnachieved()
 		if err != nil {
 			return err
 		}
 
-		if proceed {
+		if filled {
 			return nil
 		}
 
-		dsc.getOneFeedback()
+		dsc.waitRelease()
 	}
 }
 
-func (dsc *Discipline[Type]) prioritize() uint {
-	processed := uint(0)
+// Fills tactical distribution for unachieved priorities.
+func (dsc *Discipline[Type]) fillUnachieved() (bool, error) {
+	vacant := dsc.countVacantHandlers()
+
+	if vacant == 0 {
+		return false, nil
+	}
+
+	dsc.prepareUnachieved()
+	dsc.resetTactic()
+
+	if err := divide(dsc.opts.Divider, vacant, dsc.unachieved, dsc.tactic); err != nil {
+		return false, err
+	}
+
+	return distrib.IsFilled(dsc.unachieved, dsc.tactic), nil
+}
+
+func (dsc *Discipline[Type]) countVacantHandlers() uint {
+	// integer overflow or incorrect counting are not possible here because
+	// the correctness of the distribution is checked at each dividing
+	return dsc.opts.HandlersQuantity - dsc.countBusyHandlers()
+}
+
+func (dsc *Discipline[Type]) countBusyHandlers() uint {
+	busy := uint(0)
+
+	// integer overflow or incorrect counting are not possible here because
+	// the correctness of the distribution is checked at each dividing
 
 	for _, priority := range dsc.priorities {
-		if dsc.inputs[priority].Drained {
+		busy += dsc.actual[priority]
+	}
+
+	return busy
+}
+
+func (dsc *Discipline[Type]) resetTactic() {
+	for _, priority := range dsc.priorities {
+		dsc.tactic[priority] = 0
+	}
+}
+
+func (dsc *Discipline[Type]) prepareUnachieved() {
+	dsc.unachieved = dsc.unachieved[:0]
+
+	for _, priority := range dsc.priorities {
+		if dsc.actual[priority] < dsc.strategic[priority] {
+			dsc.unachieved = append(dsc.unachieved, priority)
+		}
+	}
+}
+
+func (dsc *Discipline[Type]) waitFillingUnreached() error {
+	for {
+		filled, err := dsc.fillUnreached()
+		if err != nil {
+			return err
+		}
+
+		if filled {
+			return nil
+		}
+
+		dsc.waitRelease()
+	}
+}
+
+func (dsc *Discipline[Type]) fillOperative() (bool, error) {
+	dsc.prepareUseful()
+
+	if len(dsc.useful) == 0 {
+		return false, nil
+	}
+
+	dsc.resetOperative()
+
+	err := divide(dsc.opts.Divider, dsc.opts.HandlersQuantity, dsc.useful, dsc.operative)
+	if err != nil {
+		return false, err
+	}
+
+	return distrib.IsFilled(dsc.useful, dsc.operative), nil
+}
+
+func (dsc *Discipline[Type]) prepareUseful() {
+	dsc.useful = dsc.useful[:0]
+
+	// is used the main priority list because it is necessary to take into account
+	// the results of not only the current stage of input/output, but also the previous
+	// ones
+	for _, priority := range dsc.priorities {
+		if dsc.tactic[priority] == 0 {
+			dsc.useful = append(dsc.useful, priority)
+		}
+	}
+}
+
+func (dsc *Discipline[Type]) resetOperative() {
+	for _, priority := range dsc.priorities {
+		dsc.operative[priority] = 0
+	}
+}
+
+func (dsc *Discipline[Type]) fillUnreached() (bool, error) {
+	vacant := dsc.countVacantHandlers()
+
+	if vacant == 0 {
+		return false, nil
+	}
+
+	dsc.prepareUnreached()
+	dsc.resetTactic()
+
+	if err := divide(dsc.opts.Divider, vacant, dsc.unreached, dsc.tactic); err != nil {
+		return false, err
+	}
+
+	return distrib.IsFilled(dsc.unreached, dsc.tactic), nil
+}
+
+func (dsc *Discipline[Type]) prepareUnreached() {
+	dsc.unreached = dsc.unreached[:0]
+
+	for _, priority := range dsc.useful {
+		if dsc.actual[priority] < dsc.operative[priority] {
+			dsc.unreached = append(dsc.unreached, priority)
+		}
+	}
+}
+
+func (dsc *Discipline[Type]) transfer(priorities []uint) uint {
+	transferred := uint(0)
+
+	for _, priority := range priorities {
+		if dsc.inputs[priority].Closed {
 			continue
 		}
 
-		if cap(dsc.inputs[priority].Channel) != 0 {
-			processed += dsc.io(priority)
-		} else {
-			processed += dsc.iou(priority)
-		}
+		transferred += dsc.pass(priority)
 	}
 
-	return processed
+	return transferred
 }
 
-func (dsc *Discipline[Type]) io(priority uint) uint {
-	processed := uint(0)
+func (dsc *Discipline[Type]) pass(priority uint) uint {
+	passed := uint(0)
 
 	for dsc.tactic[priority] != 0 {
 		select {
 		case item, opened := <-dsc.inputs[priority].Channel:
 			if !opened {
-				dsc.markInputAsDrained(priority)
-				return processed
+				dsc.markInputAsClosed(priority)
+				return passed
 			}
 
-			processed += dsc.send(item, priority)
+			passed += dsc.send(item, priority)
 		default:
-			return processed
+			return passed
 		}
 	}
 
-	return processed
+	return passed
 }
 
-func (dsc *Discipline[Type]) iou(priority uint) uint {
-	processed := uint(0)
-
-	interrupt := false
-
-	for dsc.tactic[priority] != 0 {
-		select {
-		case item, opened := <-dsc.inputs[priority].Channel:
-			if !opened {
-				dsc.markInputAsDrained(priority)
-				return processed
-			}
-
-			interrupt = false
-
-			processed += dsc.send(item, priority)
-		case <-dsc.interrupter.C:
-			if interrupt {
-				return processed
-			}
-
-			interrupt = true
-		}
-	}
-
-	return processed
-}
-
-func (dsc *Discipline[Type]) markInputAsDrained(priority uint) {
+func (dsc *Discipline[Type]) markInputAsClosed(priority uint) {
 	input := dsc.inputs[priority]
 
-	input.Drained = true
+	input.Closed = true
 
 	dsc.inputs[priority] = input
 }
 
 func (dsc *Discipline[Type]) send(item Type, priority uint) uint {
 	prioritized := types.Prioritized[Type]{
-		Priority: priority,
 		Item:     item,
+		Priority: priority,
 	}
 
 	dsc.output <- prioritized
 
-	dsc.decreaseTactic(priority)
-	dsc.increaseActual(priority)
+	dsc.tactic[priority]--
+	dsc.actual[priority]++
 
 	return 1
-}
-
-func (dsc *Discipline[Type]) increaseActual(priority uint) {
-	dsc.actual[priority]++
-}
-
-func (dsc *Discipline[Type]) decreaseActual(priority uint) {
-	dsc.actual[priority]--
-}
-
-func (dsc *Discipline[Type]) decreaseTactic(priority uint) {
-	dsc.tactic[priority]--
-}
-
-func (dsc *Discipline[Type]) calcTactic() (bool, error) {
-	vacants, err := dsc.calcVacants()
-	if err != nil {
-		return false, err
-	}
-
-	if vacants == 0 {
-		return false, nil
-	}
-
-	if picked := dsc.calcTacticByAddUpToStrategic(vacants); picked {
-		return true, nil
-	}
-
-	return dsc.calcTacticBase(vacants)
-}
-
-func (dsc *Discipline[Type]) calcVacants() (uint, error) {
-	busy, err := distrib.Quantity(dsc.actual)
-	if err != nil {
-		return 0, err
-	}
-
-	// we will not get an overflow because the correspondence of the quantities is
-	// checked at all stages of distribution
-	return dsc.opts.HandlersQuantity - busy, nil
-}
-
-func (dsc *Discipline[Type]) calcTacticByAddUpToStrategic(vacants uint) bool {
-	dsc.resetTactic()
-
-	picked := uint(0)
-
-	for _, priority := range dsc.priorities {
-		if dsc.actual[priority] > dsc.strategic[priority] {
-			return false
-		}
-
-		dsc.tactic[priority] = dsc.strategic[priority] - dsc.actual[priority]
-
-		picked += dsc.tactic[priority]
-	}
-
-	return picked == vacants
-}
-
-func (dsc *Discipline[Type]) calcTacticBase(vacants uint) (bool, error) {
-	dsc.resetTactic()
-	dsc.updateUncrowded()
-
-	err := safeDivide(
-		dsc.opts.Divider,
-		dsc.uncrowded,
-		vacants,
-		dsc.tactic,
-	)
-	if err != nil {
-		return false, err
-	}
-
-	return dsc.isTacticFilled(dsc.uncrowded), nil
-}
-
-func (dsc *Discipline[Type]) updateUncrowded() {
-	dsc.uncrowded = dsc.uncrowded[:0]
-
-	for _, priority := range dsc.priorities {
-		if dsc.actual[priority] < dsc.strategic[priority] {
-			dsc.uncrowded = append(dsc.uncrowded, priority)
-		}
-	}
-}
-
-func (dsc *Discipline[Type]) resetTactic() {
-	for priority := range dsc.tactic {
-		dsc.tactic[priority] = 0
-	}
-}
-
-func (dsc *Discipline[Type]) isTacticFilled(priorities []uint) bool {
-	for _, priority := range priorities {
-		if dsc.tactic[priority] == 0 {
-			return false
-		}
-	}
-
-	return true
-}
-
-func (dsc *Discipline[Type]) recalcTactic() (bool, error) {
-	remainder, err := distrib.Quantity(dsc.tactic)
-	if err != nil {
-		return false, err
-	}
-
-	dsc.updateUseful()
-	dsc.resetTactic()
-
-	err = safeDivide(
-		dsc.opts.Divider,
-		dsc.useful,
-		dsc.opts.HandlersQuantity,
-		dsc.tactic,
-	)
-	if err != nil {
-		return false, err
-	}
-
-	dsc.updateUsefulLikeUncrowded()
-	dsc.resetTactic()
-
-	err = safeDivide(
-		dsc.opts.Divider,
-		dsc.useful,
-		remainder,
-		dsc.tactic,
-	)
-	if err != nil {
-		return false, err
-	}
-
-	return dsc.isTacticFilled(dsc.useful), nil
-}
-
-func (dsc *Discipline[Type]) updateUseful() {
-	dsc.useful = dsc.useful[:0]
-
-	for _, priority := range dsc.priorities {
-		if dsc.tactic[priority] == 0 {
-			dsc.useful = append(dsc.useful, priority)
-		}
-	}
-}
-
-func (dsc *Discipline[Type]) updateUsefulLikeUncrowded() {
-	dsc.useful = dsc.useful[:0]
-
-	for _, priority := range dsc.priorities {
-		if dsc.actual[priority] < dsc.tactic[priority] {
-			dsc.useful = append(dsc.useful, priority)
-		}
-	}
 }

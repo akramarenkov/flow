@@ -6,7 +6,7 @@ import (
 )
 
 // Quantity over time.
-type QOT struct {
-	Quantity     uint
-	RelativeTime time.Duration
+type QoT struct {
+	Quantity uint
+	Time     time.Duration
 }

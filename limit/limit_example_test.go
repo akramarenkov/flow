@@ -11,9 +11,8 @@ func ExampleDiscipline() {
 	data := []int{1, 2, 3, 4, 5, 6, 7, 8, 9, 10}
 
 	// Preferably input channel should be buffered for performance reasons.
-	// Optimal capacity is in the range of 1e2 to 1e6 and should be determined
-	// using benchmarks
-	input := make(chan int, 10)
+	// Optimal capacity is in the range of 1e2 to 1e6
+	input := make(chan int, 100)
 
 	opts := limit.Opts[int]{
 		Input: input,
@@ -28,7 +27,7 @@ func ExampleDiscipline() {
 		panic(err)
 	}
 
-	outSequence := make([]int, 0, len(data))
+	output := make([]int, 0, len(data))
 
 	startedAt := time.Now()
 
@@ -41,7 +40,7 @@ func ExampleDiscipline() {
 	}()
 
 	for item := range discipline.Output() {
-		outSequence = append(outSequence, item)
+		output = append(output, item)
 	}
 
 	duration := time.Since(startedAt)
@@ -50,7 +49,7 @@ func ExampleDiscipline() {
 
 	fmt.Println(duration <= time.Duration(expected*(1.0+deviation)))
 	fmt.Println(duration >= time.Duration(expected*(1.0-deviation)))
-	fmt.Println(outSequence)
+	fmt.Println(output)
 	// Output:
 	// true
 	// true

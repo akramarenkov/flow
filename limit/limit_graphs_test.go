@@ -34,24 +34,19 @@ func TestGraphTicker(t *testing.T) {
 	testGraphTicker(t, 1e3, 100*time.Microsecond, true)
 }
 
-func testGraphTicker(
-	t *testing.T,
-	quantity int,
-	duration time.Duration,
-	stressSystem bool,
-) {
+func testGraphTicker(t *testing.T, quantity int, duration time.Duration, stress bool) {
 	if os.Getenv(env.EnableGraphs) == "" {
 		t.SkipNow()
 	}
 
-	if stressSystem {
-		stress := stressor.New(stressor.Opts{})
-		defer stress.Stop()
+	if stress {
+		stressor := stressor.New(stressor.Opts{})
+		defer stressor.Stop()
 
 		time.Sleep(time.Second)
 	}
 
-	relativeTimes := make([]time.Duration, 0, quantity)
+	times := make([]time.Duration, 0, quantity)
 
 	ticker := time.NewTicker(duration)
 	defer ticker.Stop()
@@ -59,15 +54,15 @@ func testGraphTicker(
 	startedAt := time.Now()
 
 	for range ticker.C {
-		relativeTimes = append(relativeTimes, time.Since(startedAt))
+		times = append(times, time.Since(startedAt))
 
-		if len(relativeTimes) == quantity {
+		if len(times) == quantity {
 			break
 		}
 	}
 
-	createDelayerQuantitiesGraph(t, "Ticker", "ticker", relativeTimes, duration, stressSystem)
-	createDelayerDeviationsGraph(t, "Ticker", "ticker", relativeTimes, duration, stressSystem)
+	createDelayerQuantitiesGraph(t, "Ticker", "ticker", times, duration, stress)
+	createDelayerDeviationsGraph(t, "Ticker", "ticker", times, duration, stress)
 }
 
 func TestGraphSleep(t *testing.T) {
@@ -86,57 +81,52 @@ func TestGraphSleep(t *testing.T) {
 	testGraphSleep(t, 1e3, 100*time.Microsecond, true)
 }
 
-func testGraphSleep(
-	t *testing.T,
-	quantity int,
-	duration time.Duration,
-	stressSystem bool,
-) {
+func testGraphSleep(t *testing.T, quantity int, duration time.Duration, stress bool) {
 	if os.Getenv(env.EnableGraphs) == "" {
 		t.SkipNow()
 	}
 
-	if stressSystem {
-		stress := stressor.New(stressor.Opts{})
-		defer stress.Stop()
+	if stress {
+		stressor := stressor.New(stressor.Opts{})
+		defer stressor.Stop()
 
 		time.Sleep(time.Second)
 	}
 
-	relativeTimes := make([]time.Duration, quantity)
+	times := make([]time.Duration, quantity)
 
 	startedAt := time.Now()
 
 	for id := range quantity {
 		time.Sleep(duration)
 
-		relativeTimes[id] = time.Since(startedAt)
+		times[id] = time.Since(startedAt)
 	}
 
-	createDelayerQuantitiesGraph(t, "Sleep", "sleep", relativeTimes, duration, stressSystem)
-	createDelayerDeviationsGraph(t, "Sleep", "sleep", relativeTimes, duration, stressSystem)
+	createDelayerQuantitiesGraph(t, "Sleep", "sleep", times, duration, stress)
+	createDelayerDeviationsGraph(t, "Sleep", "sleep", times, duration, stress)
 }
 
 func createDelayerQuantitiesGraph(
 	t *testing.T,
 	titlePerfix string,
 	fileNamePerfix string,
-	relativeTimes []time.Duration,
-	duration time.Duration,
-	stressSystem bool,
+	times []time.Duration,
+	delay time.Duration,
+	stress bool,
 ) {
-	quantities, calcInterval := research.CalcIntervalQuantities(relativeTimes, 0, duration)
+	quantities, interval := research.QuantityPerInterval(times, 0, delay)
 
-	axisY, axisX := research.ConvertQuantityOverTimeToBarEcharts(quantities)
+	axisY, axisX := research.QotToBarChart(quantities)
 
-	expectedDuration := time.Duration(len(relativeTimes)) * duration
+	expectedDuration := time.Duration(len(times)) * delay
 
 	subtitleAdd := fmt.Sprintf(
-		"duration: %s, "+formatTotalDuration(expectedDuration, relativeTimes),
-		duration,
+		"duration: %s, "+fmtTotalDuration(expectedDuration, times),
+		delay,
 	)
 
-	fileNameAdd := fileNamePerfix + "_quantities_duration_" + duration.String()
+	fileNameAdd := fileNamePerfix + "_quantities_duration_" + delay.String()
 
 	createGraph(
 		t,
@@ -144,9 +134,9 @@ func createDelayerQuantitiesGraph(
 		subtitleAdd,
 		fileNameAdd,
 		"quantities",
-		len(relativeTimes),
-		calcInterval.String(),
-		stressSystem,
+		len(times),
+		interval.String(),
+		stress,
 		axisY,
 		axisX,
 	)
@@ -156,13 +146,13 @@ func createDelayerDeviationsGraph(
 	t *testing.T,
 	titlePerfix string,
 	fileNamePerfix string,
-	relativeTimes []time.Duration,
+	times []time.Duration,
 	duration time.Duration,
-	stressSystem bool,
+	stress bool,
 ) {
-	deviations := research.CalcRelativeDeviations(relativeTimes, duration)
+	deviations := research.Deviations(times, duration)
 
-	axisY, axisX := research.ConvertRelativeDeviationsToBarEcharts(deviations)
+	axisY, axisX := research.DeviationsToBarChart(deviations)
 
 	subtitleAdd := fmt.Sprintf(
 		"duration: %s",
@@ -177,9 +167,9 @@ func createDelayerDeviationsGraph(
 		subtitleAdd,
 		fileNameAdd,
 		"deviations",
-		len(relativeTimes),
+		len(times),
 		"1%",
-		stressSystem,
+		stress,
 		axisY,
 		axisX,
 	)
@@ -287,19 +277,14 @@ func TestGraphDiscipline(t *testing.T) {
 	)
 }
 
-func testGraphDiscipline(
-	t *testing.T,
-	quantity int,
-	limit Rate,
-	stressSystem bool,
-) {
+func testGraphDiscipline(t *testing.T, quantity int, limit Rate, stress bool) {
 	if os.Getenv(env.EnableGraphs) == "" {
 		t.SkipNow()
 	}
 
-	if stressSystem {
-		stress := stressor.New(stressor.Opts{})
-		defer stress.Stop()
+	if stress {
+		stressor := stressor.New(stressor.Opts{})
+		defer stressor.Stop()
 
 		time.Sleep(time.Second)
 	}
@@ -314,7 +299,7 @@ func testGraphDiscipline(
 	discipline, err := New(opts)
 	require.NoError(t, err)
 
-	relativeTimes := make([]time.Duration, 0, quantity)
+	times := make([]time.Duration, 0, quantity)
 
 	startedAt := time.Now()
 
@@ -327,31 +312,30 @@ func testGraphDiscipline(
 	}()
 
 	for range discipline.Output() {
-		relativeTimes = append(relativeTimes, time.Since(startedAt))
+		times = append(times, time.Since(startedAt))
 	}
 
-	createQuantitiesGraph(t, relativeTimes, limit, stressSystem)
-	createDeviationsGraph(t, relativeTimes, limit, stressSystem)
+	createQuantitiesGraph(t, times, limit, stress)
 }
 
 func createQuantitiesGraph(
 	t *testing.T,
-	relativeTimes []time.Duration,
+	times []time.Duration,
 	limit Rate,
-	stressSystem bool,
+	stress bool,
 ) {
-	quantities, calcInterval := research.CalcIntervalQuantities(relativeTimes, 100, 0)
+	quantities, interval := research.QuantityPerInterval(times, 100, 0)
 
-	axisY, axisX := research.ConvertQuantityOverTimeToBarEcharts(quantities)
+	axisY, axisX := research.QotToBarChart(quantities)
 
 	limitQuantity, err := safe.IToI[time.Duration](limit.Quantity)
 	require.NoError(t, err)
 
-	expectedDuration := time.Duration(len(relativeTimes)) * limit.Interval / limitQuantity
+	expectedDuration := time.Duration(len(times)) * limit.Interval / limitQuantity
 
 	subtitleAdd := fmt.Sprintf(
 		"limit: {quantity: %d, interval: %s}, "+
-			formatTotalDuration(expectedDuration, relativeTimes),
+			fmtTotalDuration(expectedDuration, times),
 		limit.Quantity,
 		limit.Interval,
 	)
@@ -368,51 +352,9 @@ func createQuantitiesGraph(
 		subtitleAdd,
 		fileNameAdd,
 		"quantities",
-		len(relativeTimes),
-		calcInterval.String(),
-		stressSystem,
-		axisY,
-		axisX,
-	)
-}
-
-func createDeviationsGraph(
-	t *testing.T,
-	relativeTimes []time.Duration,
-	limit Rate,
-	stressSystem bool,
-) {
-	flatten, err := limit.Flatten()
-	require.NoError(t, err)
-
-	deviations := research.CalcRelativeDeviations(relativeTimes, flatten.Interval)
-
-	axisY, axisX := research.ConvertRelativeDeviationsToBarEcharts(deviations)
-
-	subtitleAdd := fmt.Sprintf(
-		"limit: {quantity: %d, interval: %s}, "+
-			"flatten: {quantity: %d, interval: %s}",
-		limit.Quantity,
-		limit.Interval,
-		flatten.Quantity,
-		flatten.Interval,
-	)
-
-	fileNameAdd := "deviations_" +
-		"limit_quantity_" +
-		strconv.FormatUint(limit.Quantity, consts.DecimalBase) +
-		"_limit_interval_" +
-		limit.Interval.String()
-
-	createGraph(
-		t,
-		"Deviations",
-		subtitleAdd,
-		fileNameAdd,
-		"deviations",
-		len(relativeTimes),
-		"1%",
-		stressSystem,
+		len(times),
+		interval.String(),
+		stress,
 		axisY,
 		axisX,
 	)
@@ -426,7 +368,7 @@ func createGraph(
 	seriesName string,
 	totalQuantity int,
 	graphInterval string,
-	stressSystem bool,
+	stress bool,
 	series []chartsopts.BarData,
 	abscissa interface{},
 ) {
@@ -438,7 +380,7 @@ func createGraph(
 			"time: %s",
 		totalQuantity,
 		graphInterval,
-		stressSystem,
+		stress,
 		time.Now().Format(time.RFC3339),
 	)
 
@@ -447,7 +389,7 @@ func createGraph(
 		"_" +
 		fileNameAdd +
 		"_stress_" +
-		strconv.FormatBool(stressSystem) +
+		strconv.FormatBool(stress) +
 		".html"
 
 	createBarGraph(
@@ -496,11 +438,11 @@ func createBarGraph(
 	require.NoError(t, err)
 }
 
-func formatTotalDuration(expected time.Duration, relativeTimes []time.Duration) string {
+func fmtTotalDuration(expected time.Duration, times []time.Duration) string {
 	out := fmt.Sprintf(
 		"total duration: {expected:  %s, actual: %s}",
 		expected,
-		research.CalcTotalDuration(relativeTimes),
+		research.TotalDuration(times),
 	)
 
 	return out

@@ -5,11 +5,32 @@ import (
 	"time"
 
 	"github.com/akramarenkov/flow/priority/divider"
-	"github.com/akramarenkov/flow/priority/internal/measurer"
+	"github.com/akramarenkov/flow/priority/internal/measuring"
 	"github.com/akramarenkov/flow/priority/internal/research"
+	"github.com/akramarenkov/flow/priority/internal/unmanaged"
+	"github.com/akramarenkov/flow/priority/types"
+	"github.com/akramarenkov/safe"
 
 	"github.com/stretchr/testify/require"
 )
+
+func TestOptsAddInput(t *testing.T) {
+	opts := Opts[uint]{
+		Divider:          divider.Fair,
+		HandlersQuantity: 6,
+	}
+
+	_, err := New(opts)
+	require.Error(t, err)
+
+	require.Error(t, opts.AddInput(0, make(chan uint)))
+	require.Error(t, opts.AddInput(1, nil))
+	require.NoError(t, opts.AddInput(1, make(chan uint)))
+	require.Error(t, opts.AddInput(1, make(chan uint)))
+
+	_, err = New(opts)
+	require.NoError(t, err)
+}
 
 func TestOptsValidation(t *testing.T) {
 	opts := Opts[uint]{}
@@ -36,6 +57,29 @@ func TestOptsValidation(t *testing.T) {
 		Divider:          divider.Fair,
 		HandlersQuantity: 6,
 		Inputs: map[uint]<-chan uint{
+			0: make(chan uint),
+		},
+	}
+
+	_, err = New(opts)
+	require.Error(t, err)
+
+	opts = Opts[uint]{
+		Divider:          divider.Fair,
+		HandlersQuantity: 6,
+		Inputs: map[uint]<-chan uint{
+			1: make(chan uint),
+			2: nil,
+		},
+	}
+
+	_, err = New(opts)
+	require.Error(t, err)
+
+	opts = Opts[uint]{
+		Divider:          divider.Fair,
+		HandlersQuantity: 6,
+		Inputs: map[uint]<-chan uint{
 			1: make(chan uint),
 		},
 	}
@@ -44,110 +88,9 @@ func TestOptsValidation(t *testing.T) {
 	require.NoError(t, err)
 }
 
-func BenchmarkDisciplineFair(b *testing.B) {
-	measurerOpts := measurer.Opts{
-		DisableMeasures:  true,
-		HandlersQuantity: 600,
-	}
-
-	msr := measurer.New(measurerOpts)
-
-	msr.AddWrite(1, 5000000)
-	msr.AddWrite(2, 5000000)
-	msr.AddWrite(3, 5000000)
-
-	opts := Opts[uint]{
-		Divider:          divider.Fair,
-		HandlersQuantity: measurerOpts.HandlersQuantity,
-		Inputs:           msr.GetInputs(),
-	}
-
-	discipline, err := New(opts)
-	require.NoError(b, err)
-
-	_ = msr.Play(discipline)
-}
-
-func BenchmarkDisciplineRate(b *testing.B) {
-	measurerOpts := measurer.Opts{
-		DisableMeasures:  true,
-		HandlersQuantity: 600,
-	}
-
-	msr := measurer.New(measurerOpts)
-
-	msr.AddWrite(1, 5000000)
-	msr.AddWrite(2, 5000000)
-	msr.AddWrite(3, 5000000)
-
-	opts := Opts[uint]{
-		Divider:          divider.Rate,
-		HandlersQuantity: measurerOpts.HandlersQuantity,
-		Inputs:           msr.GetInputs(),
-	}
-
-	discipline, err := New(opts)
-	require.NoError(b, err)
-
-	_ = msr.Play(discipline)
-}
-
-func BenchmarkDisciplineFairUnbuffered(b *testing.B) {
-	measurerOpts := measurer.Opts{
-		DisableMeasures:  true,
-		HandlersQuantity: 600,
-		UnbufferedInput:  true,
-	}
-
-	msr := measurer.New(measurerOpts)
-
-	msr.AddWrite(1, 5000000)
-	msr.AddWrite(2, 5000000)
-	msr.AddWrite(3, 5000000)
-
-	opts := Opts[uint]{
-		Divider:          divider.Fair,
-		HandlersQuantity: measurerOpts.HandlersQuantity,
-		Inputs:           msr.GetInputs(),
-	}
-
-	discipline, err := New(opts)
-	require.NoError(b, err)
-
-	_ = msr.Play(discipline)
-}
-
-func BenchmarkDisciplineRateUnbuffered(b *testing.B) {
-	measurerOpts := measurer.Opts{
-		DisableMeasures:  true,
-		HandlersQuantity: 600,
-		UnbufferedInput:  true,
-	}
-
-	msr := measurer.New(measurerOpts)
-
-	msr.AddWrite(1, 5000000)
-	msr.AddWrite(2, 5000000)
-	msr.AddWrite(3, 5000000)
-
-	opts := Opts[uint]{
-		Divider:          divider.Rate,
-		HandlersQuantity: measurerOpts.HandlersQuantity,
-		Inputs:           msr.GetInputs(),
-	}
-
-	discipline, err := New(opts)
-	require.NoError(b, err)
-
-	_ = msr.Play(discipline)
-}
-
 func TestDisciplineFair(t *testing.T) {
-	measurerOpts := measurer.Opts{
-		HandlersQuantity: 6,
-	}
-
-	msr := measurer.New(measurerOpts)
+	msr, err := measuring.NewMeasurer(6)
+	require.NoError(t, err)
 
 	msr.AddWrite(1, 100000)
 	msr.AddWrite(2, 100000)
@@ -155,24 +98,20 @@ func TestDisciplineFair(t *testing.T) {
 
 	opts := Opts[uint]{
 		Divider:          divider.Fair,
-		HandlersQuantity: measurerOpts.HandlersQuantity,
-		Inputs:           msr.GetInputs(),
+		HandlersQuantity: msr.HandlersQuantity(),
+		Inputs:           msr.Inputs(),
 	}
 
 	discipline, err := New(opts)
 	require.NoError(t, err)
 
-	measures := msr.Play(discipline)
-
-	require.Len(t, measures, int(msr.GetExpectedMeasuresQuantity()))
+	_, err = msr.Play(discipline)
+	require.NoError(t, err)
 }
 
 func TestDisciplineRate(t *testing.T) {
-	measurerOpts := measurer.Opts{
-		HandlersQuantity: 6,
-	}
-
-	msr := measurer.New(measurerOpts)
+	msr, err := measuring.NewMeasurer(6)
+	require.NoError(t, err)
 
 	msr.AddWrite(1, 100000)
 	msr.AddWrite(2, 100000)
@@ -180,25 +119,20 @@ func TestDisciplineRate(t *testing.T) {
 
 	opts := Opts[uint]{
 		Divider:          divider.Rate,
-		HandlersQuantity: measurerOpts.HandlersQuantity,
-		Inputs:           msr.GetInputs(),
+		HandlersQuantity: msr.HandlersQuantity(),
+		Inputs:           msr.Inputs(),
 	}
 
 	discipline, err := New(opts)
 	require.NoError(t, err)
 
-	measures := msr.Play(discipline)
-
-	require.Len(t, measures, int(msr.GetExpectedMeasuresQuantity()))
+	_, err = msr.Play(discipline)
+	require.NoError(t, err)
 }
 
 func TestDisciplineFairUnbuffered(t *testing.T) {
-	measurerOpts := measurer.Opts{
-		HandlersQuantity: 6,
-		UnbufferedInput:  true,
-	}
-
-	msr := measurer.New(measurerOpts)
+	msr, err := measuring.NewMeasurer(6, 0)
+	require.NoError(t, err)
 
 	msr.AddWrite(1, 100000)
 	msr.AddWrite(2, 100000)
@@ -206,25 +140,20 @@ func TestDisciplineFairUnbuffered(t *testing.T) {
 
 	opts := Opts[uint]{
 		Divider:          divider.Fair,
-		HandlersQuantity: measurerOpts.HandlersQuantity,
-		Inputs:           msr.GetInputs(),
+		HandlersQuantity: msr.HandlersQuantity(),
+		Inputs:           msr.Inputs(),
 	}
 
 	discipline, err := New(opts)
 	require.NoError(t, err)
 
-	measures := msr.Play(discipline)
-
-	require.Len(t, measures, int(msr.GetExpectedMeasuresQuantity()))
+	_, err = msr.Play(discipline)
+	require.NoError(t, err)
 }
 
 func TestDisciplineRateUnbuffered(t *testing.T) {
-	measurerOpts := measurer.Opts{
-		HandlersQuantity: 6,
-		UnbufferedInput:  true,
-	}
-
-	msr := measurer.New(measurerOpts)
+	msr, err := measuring.NewMeasurer(6, 0)
+	require.NoError(t, err)
 
 	msr.AddWrite(1, 100000)
 	msr.AddWrite(2, 100000)
@@ -232,137 +161,171 @@ func TestDisciplineRateUnbuffered(t *testing.T) {
 
 	opts := Opts[uint]{
 		Divider:          divider.Rate,
-		HandlersQuantity: measurerOpts.HandlersQuantity,
-		Inputs:           msr.GetInputs(),
+		HandlersQuantity: msr.HandlersQuantity(),
+		Inputs:           msr.Inputs(),
 	}
 
 	discipline, err := New(opts)
 	require.NoError(t, err)
 
-	measures := msr.Play(discipline)
-
-	require.Len(t, measures, int(msr.GetExpectedMeasuresQuantity()))
+	_, err = msr.Play(discipline)
+	require.NoError(t, err)
 }
 
-func TestDisciplineBadDivider(t *testing.T) {
-	measurerOpts := measurer.Opts{
-		HandlersQuantity: 6,
-	}
-
-	msr := measurer.New(measurerOpts)
+func TestDisciplineError(t *testing.T) {
+	msr, err := measuring.NewMeasurer(6)
+	require.NoError(t, err)
 
 	msr.AddWrite(1, 100000)
 	msr.AddWrite(2, 100000)
 	msr.AddWrite(3, 100000)
 
-	dividerCallsQuantity := 0
-
-	divider := func(priorities []uint, dividend uint, distribution map[uint]uint) {
-		divider.Fair(priorities, dividend, distribution)
-
-		dividerCallsQuantity++
-
-		if dividerCallsQuantity == 1 {
-			return
-		}
-
-		for priority := range distribution {
-			distribution[priority] *= 2
-		}
+	wrong := func(_ uint, _ []uint, _ map[uint]uint) error {
+		return nil
 	}
 
 	opts := Opts[uint]{
-		Divider:          divider,
-		HandlersQuantity: measurerOpts.HandlersQuantity,
-		Inputs:           msr.GetInputs(),
+		Divider:          wrong,
+		HandlersQuantity: msr.HandlersQuantity(),
+		Inputs:           msr.Inputs(),
 	}
 
-	discipline, err := New(opts)
-	require.NoError(t, err)
-
-	measures := msr.Play(discipline)
-
-	require.NotEqual(t, int(msr.GetExpectedMeasuresQuantity()), len(measures))
+	_, err = New(opts)
+	require.Error(t, err)
 }
 
-func TestDisciplineBadDividerInRecalc(t *testing.T) {
-	measurerOpts := measurer.Opts{
-		HandlersQuantity: 6,
-	}
+func TestDisciplineErrorHandlersQuantityTooSmall(t *testing.T) {
+	msr, err := measuring.NewMeasurer(2)
+	require.NoError(t, err)
 
-	msr := measurer.New(measurerOpts)
-
-	msr.AddWrite(1, 0)
-	msr.AddWrite(2, 0)
+	msr.AddWrite(1, 100000)
+	msr.AddWrite(2, 100000)
 	msr.AddWrite(3, 100000)
 
-	dividerCallsQuantity := 0
+	opts := Opts[uint]{
+		Divider:          divider.Fair,
+		HandlersQuantity: msr.HandlersQuantity(),
+		Inputs:           msr.Inputs(),
+	}
 
-	divider := func(priorities []uint, dividend uint, distribution map[uint]uint) {
-		divider.Fair(priorities, dividend, distribution)
+	_, err = New(opts)
+	require.Error(t, err)
+}
 
-		dividerCallsQuantity++
+func TestDisciplineErrorInPlayOne(t *testing.T) {
+	msr, err := measuring.NewMeasurer(6)
+	require.NoError(t, err)
 
-		if dividerCallsQuantity == 1 || dividerCallsQuantity%2 == 0 {
-			return
+	msr.AddWrite(1, 100000)
+	msr.AddWrite(2, 100000)
+	msr.AddWrite(3, 100000)
+
+	calls := 0
+
+	wrong := func(quantity uint, priorities []uint, distribution map[uint]uint) error {
+		calls++
+
+		if calls == 1 {
+			return divider.Fair(quantity, priorities, distribution)
 		}
 
-		for priority := range distribution {
-			distribution[priority] *= 2
-		}
+		return nil
 	}
 
 	opts := Opts[uint]{
-		Divider:          divider,
-		HandlersQuantity: measurerOpts.HandlersQuantity,
-		Inputs:           msr.GetInputs(),
+		Divider:          wrong,
+		HandlersQuantity: msr.HandlersQuantity(),
+		Inputs:           msr.Inputs(),
 	}
 
 	discipline, err := New(opts)
 	require.NoError(t, err)
 
-	measures := msr.Play(discipline)
-
-	require.NotEqual(t, int(msr.GetExpectedMeasuresQuantity()), len(measures))
+	_, err = msr.Play(discipline)
+	require.Error(t, err)
 }
 
-func TestDisciplineBadDividerInNew(t *testing.T) {
-	measurerOpts := measurer.Opts{
-		HandlersQuantity: 6,
-	}
+func TestDisciplineErrorInPlayTwo(t *testing.T) {
+	msr, err := measuring.NewMeasurer(6)
+	require.NoError(t, err)
 
-	msr := measurer.New(measurerOpts)
+	msr.AddWrite(1, 100000)
+	msr.AddWrite(2, 100000)
+	msr.AddWrite(3, 0)
 
-	msr.AddWrite(1, 1)
-	msr.AddWrite(2, 1)
-	msr.AddWrite(3, 1)
+	calls := 0
 
-	divider := func(priorities []uint, dividend uint, distribution map[uint]uint) {
-		divider.Fair(priorities, dividend, distribution)
+	wrong := func(quantity uint, priorities []uint, distribution map[uint]uint) error {
+		calls++
 
-		for priority := range distribution {
-			distribution[priority] *= 2
+		if calls == 1 {
+			return divider.Fair(quantity, priorities, distribution)
 		}
+
+		if len(priorities) == 3 {
+			return divider.Fair(quantity, priorities, distribution)
+		}
+
+		return nil
 	}
 
 	opts := Opts[uint]{
-		Divider:          divider,
-		HandlersQuantity: measurerOpts.HandlersQuantity,
-		Inputs:           msr.GetInputs(),
+		Divider:          wrong,
+		HandlersQuantity: msr.HandlersQuantity(),
+		Inputs:           msr.Inputs(),
 	}
 
-	_, err := New(opts)
+	discipline, err := New(opts)
+	require.NoError(t, err)
+
+	_, err = msr.Play(discipline)
+	require.Error(t, err)
+}
+
+func TestDisciplineErrorInPlayThree(t *testing.T) {
+	msr, err := measuring.NewMeasurer(6)
+	require.NoError(t, err)
+
+	msr.AddWrite(1, 100000)
+	msr.AddWrite(2, 100000)
+	msr.AddWrite(3, 0)
+
+	calls := 0
+
+	wrong := func(quantity uint, priorities []uint, distribution map[uint]uint) error {
+		calls++
+
+		if calls == 1 {
+			return divider.Fair(quantity, priorities, distribution)
+		}
+
+		if len(priorities) == 3 {
+			return divider.Fair(quantity, priorities, distribution)
+		}
+
+		if quantity == msr.HandlersQuantity() {
+			return divider.Fair(quantity, priorities, distribution)
+		}
+
+		return nil
+	}
+
+	opts := Opts[uint]{
+		Divider:          wrong,
+		HandlersQuantity: msr.HandlersQuantity(),
+		Inputs:           msr.Inputs(),
+	}
+
+	discipline, err := New(opts)
+	require.NoError(t, err)
+
+	_, err = msr.Play(discipline)
 	require.Error(t, err)
 }
 
 func TestDisciplineFairOverQuantity(t *testing.T) {
-	handlersQuantity := uint(6)
-
-	measurerOpts := measurer.Opts{
-		HandlersQuantity: 2 * handlersQuantity,
-	}
-
-	msr := measurer.New(measurerOpts)
+	msr, err := measuring.NewMeasurer(12)
+	require.NoError(t, err)
 
 	msr.AddWrite(1, 1000000)
 	msr.AddWrite(2, 100000)
@@ -370,32 +333,28 @@ func TestDisciplineFairOverQuantity(t *testing.T) {
 
 	opts := Opts[uint]{
 		Divider:          divider.Fair,
-		HandlersQuantity: handlersQuantity,
-		Inputs:           msr.GetInputs(),
+		HandlersQuantity: msr.HandlersQuantity() / 2,
+		Inputs:           msr.Inputs(),
 	}
 
 	discipline, err := New(opts)
 	require.NoError(t, err)
 
-	measures := msr.Play(discipline)
+	measurements, err := msr.Play(discipline)
+	require.NoError(t, err)
 
-	quantities := research.CalcInProcessing(measures, 100*time.Millisecond)
+	quantities := research.InProcessing(measurements, 100*time.Millisecond)
 
 	for priority := range quantities {
 		for id := range quantities[priority] {
-			require.LessOrEqual(t, quantities[priority][id].Quantity, handlersQuantity)
+			require.LessOrEqual(t, quantities[priority][id].Quantity, opts.HandlersQuantity)
 		}
 	}
 }
 
 func TestDisciplineRateOverQuantity(t *testing.T) {
-	handlersQuantity := uint(6)
-
-	measurerOpts := measurer.Opts{
-		HandlersQuantity: 2 * handlersQuantity,
-	}
-
-	msr := measurer.New(measurerOpts)
+	msr, err := measuring.NewMeasurer(12)
+	require.NoError(t, err)
 
 	msr.AddWrite(1, 100000)
 	msr.AddWrite(2, 100000)
@@ -403,62 +362,151 @@ func TestDisciplineRateOverQuantity(t *testing.T) {
 
 	opts := Opts[uint]{
 		Divider:          divider.Rate,
-		HandlersQuantity: handlersQuantity,
-		Inputs:           msr.GetInputs(),
+		HandlersQuantity: msr.HandlersQuantity() / 2,
+		Inputs:           msr.Inputs(),
 	}
 
 	discipline, err := New(opts)
 	require.NoError(t, err)
 
-	measures := msr.Play(discipline)
+	measurements, err := msr.Play(discipline)
+	require.NoError(t, err)
 
-	quantities := research.CalcInProcessing(measures, 100*time.Millisecond)
+	quantities := research.InProcessing(measurements, 100*time.Millisecond)
 
 	for priority := range quantities {
 		for id := range quantities[priority] {
-			require.LessOrEqual(t, quantities[priority][id].Quantity, handlersQuantity)
+			require.LessOrEqual(t, quantities[priority][id].Quantity, opts.HandlersQuantity)
 		}
 	}
 }
 
-func TestDisciplineFairTooSmallHandlersQuantity(t *testing.T) {
-	measurerOpts := measurer.Opts{
-		HandlersQuantity: 2,
-	}
-
-	msr := measurer.New(measurerOpts)
-
-	msr.AddWrite(1, 100000)
-	msr.AddWrite(2, 100000)
-	msr.AddWrite(3, 100000)
-
-	opts := Opts[uint]{
-		Divider:          divider.Fair,
-		HandlersQuantity: measurerOpts.HandlersQuantity,
-		Inputs:           msr.GetInputs(),
-	}
-
-	_, err := New(opts)
-	require.Error(t, err)
+func BenchmarkDisciplineFair6(b *testing.B) {
+	benchmarkDiscipline(b, divider.Fair, 6)
 }
 
-func TestDisciplineRateTooSmallHandlersQuantity(t *testing.T) {
-	measurerOpts := measurer.Opts{
-		HandlersQuantity: 5,
-	}
+func BenchmarkDisciplineRate6(b *testing.B) {
+	benchmarkDiscipline(b, divider.Rate, 6)
+}
 
-	msr := measurer.New(measurerOpts)
+func BenchmarkUnmanaged6(b *testing.B) {
+	benchmarkUnmanaged(b, 6)
+}
 
-	msr.AddWrite(1, 100000)
-	msr.AddWrite(2, 100000)
-	msr.AddWrite(3, 100000)
+func BenchmarkDisciplineFair6Unbuffered(b *testing.B) {
+	benchmarkDiscipline(b, divider.Fair, 6, 0)
+}
+
+func BenchmarkDisciplineRate6Unbuffered(b *testing.B) {
+	benchmarkDiscipline(b, divider.Rate, 6, 0)
+}
+
+func BenchmarkUnmanaged6Unbuffered(b *testing.B) {
+	benchmarkUnmanaged(b, 6, 0)
+}
+
+func BenchmarkDisciplineFair60(b *testing.B) {
+	benchmarkDiscipline(b, divider.Fair, 60)
+}
+
+func BenchmarkDisciplineRate60(b *testing.B) {
+	benchmarkDiscipline(b, divider.Rate, 60)
+}
+
+func BenchmarkUnmanaged60(b *testing.B) {
+	benchmarkUnmanaged(b, 60)
+}
+
+func BenchmarkDisciplineFair60Unbuffered(b *testing.B) {
+	benchmarkDiscipline(b, divider.Fair, 60, 0)
+}
+
+func BenchmarkDisciplineRate60Unbuffered(b *testing.B) {
+	benchmarkDiscipline(b, divider.Rate, 60, 0)
+}
+
+func BenchmarkUnmanaged60Unbuffered(b *testing.B) {
+	benchmarkUnmanaged(b, 60, 0)
+}
+
+func BenchmarkDisciplineFair600(b *testing.B) {
+	benchmarkDiscipline(b, divider.Fair, 600)
+}
+
+func BenchmarkDisciplineRate600(b *testing.B) {
+	benchmarkDiscipline(b, divider.Rate, 600)
+}
+
+func BenchmarkUnmanaged600(b *testing.B) {
+	benchmarkUnmanaged(b, 600)
+}
+
+func BenchmarkDisciplineFair600Unbuffered(b *testing.B) {
+	benchmarkDiscipline(b, divider.Fair, 600, 0)
+}
+
+func BenchmarkDisciplineRate600Unbuffered(b *testing.B) {
+	benchmarkDiscipline(b, divider.Rate, 600, 0)
+}
+
+func BenchmarkUnmanaged600Unbuffered(b *testing.B) {
+	benchmarkUnmanaged(b, 600, 0)
+}
+
+func benchmarkDiscipline(
+	b *testing.B,
+	divider types.Divider,
+	handlersQuantity uint,
+	inputCapacity ...uint,
+) {
+	itemsQuantity, err := safe.IToI[uint](b.N)
+	require.NoError(b, err)
+
+	bnch, err := measuring.NewBenchmarker(handlersQuantity, inputCapacity...)
+	require.NoError(b, err)
+
+	bnch.AddItems(3, itemsQuantity)
+	bnch.AddItems(2, itemsQuantity)
+	bnch.AddItems(1, itemsQuantity)
 
 	opts := Opts[uint]{
-		Divider:          divider.Rate,
-		HandlersQuantity: measurerOpts.HandlersQuantity,
-		Inputs:           msr.GetInputs(),
+		Divider:          divider,
+		HandlersQuantity: bnch.HandlersQuantity(),
+		Inputs:           bnch.Inputs(),
 	}
 
-	_, err := New(opts)
-	require.Error(t, err)
+	discipline, err := New(opts)
+	require.NoError(b, err)
+
+	b.ResetTimer()
+
+	bnch.Play(discipline)
+}
+
+func benchmarkUnmanaged(
+	b *testing.B,
+	handlersQuantity uint,
+	inputCapacity ...uint,
+) {
+	itemsQuantity, err := safe.IToI[uint](b.N)
+	require.NoError(b, err)
+
+	bnch, err := measuring.NewBenchmarker(handlersQuantity, inputCapacity...)
+	require.NoError(b, err)
+
+	bnch.AddItems(3, itemsQuantity)
+	bnch.AddItems(2, itemsQuantity)
+	bnch.AddItems(1, itemsQuantity)
+
+	opts := unmanaged.Opts[uint]{
+		HandlersQuantity: bnch.HandlersQuantity(),
+		Inputs:           bnch.Inputs(),
+	}
+
+	discipline, err := unmanaged.New(opts)
+	require.NoError(b, err)
+
+	b.ResetTimer()
+
+	bnch.Play(discipline)
 }

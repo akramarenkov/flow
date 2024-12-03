@@ -9,8 +9,8 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestCalcIntervalQuantitiesSplitByInterval(t *testing.T) {
-	relativeTimes := []time.Duration{
+func TestQuantityPerIntervalSplitByInterval(t *testing.T) {
+	times := []time.Duration{
 		0,
 		time.Millisecond,
 		2 * time.Millisecond,
@@ -23,54 +23,50 @@ func TestCalcIntervalQuantitiesSplitByInterval(t *testing.T) {
 
 	interval := 10 * time.Millisecond
 
-	expected := []qot.QOT{
+	expected := []qot.QoT{
 		{
-			Quantity:     5,
-			RelativeTime: 0,
+			Quantity: 5,
+			Time:     0,
 		},
 		{
-			Quantity:     3,
-			RelativeTime: 10 * time.Millisecond,
+			Quantity: 3,
+			Time:     10 * time.Millisecond,
 		},
 	}
 
-	expectedY := []chartsopts.BarData{
+	expectedAxisY := []chartsopts.BarData{
 		{
 			Name:  "0s",
 			Value: uint(5),
 			Tooltip: &chartsopts.Tooltip{
-				Show: true,
+				Show: chartsopts.Bool(true),
 			},
 		},
 		{
 			Name:  "10ms",
 			Value: uint(3),
 			Tooltip: &chartsopts.Tooltip{
-				Show: true,
+				Show: chartsopts.Bool(true),
 			},
 		},
 	}
 
-	expectedX := []int{
+	expectedAxisX := []int{
 		0,
 		1,
 	}
 
-	quantities, calcInterval := CalcIntervalQuantities(
-		relativeTimes,
-		0,
-		interval,
-	)
+	quantities, actualInterval := QuantityPerInterval(times, 0, interval)
 	require.Equal(t, expected, quantities)
-	require.Equal(t, interval, calcInterval)
+	require.Equal(t, interval, actualInterval)
 
-	axisY, axisX := ConvertQuantityOverTimeToBarEcharts(quantities)
-	require.Equal(t, expectedY, axisY)
-	require.Equal(t, expectedX, axisX)
+	axisY, axisX := QotToBarChart(quantities)
+	require.Equal(t, expectedAxisY, axisY)
+	require.Equal(t, expectedAxisX, axisX)
 }
 
-func TestCalcIntervalQuantitiesSplitByIntervalEntirely(t *testing.T) {
-	relativeTimes := []time.Duration{
+func TestQuantityPerIntervalSplitByIntervalEntirely(t *testing.T) {
+	times := []time.Duration{
 		0,
 		time.Millisecond,
 		2 * time.Millisecond,
@@ -83,32 +79,28 @@ func TestCalcIntervalQuantitiesSplitByIntervalEntirely(t *testing.T) {
 
 	interval := 10 * time.Millisecond
 
-	expected := []qot.QOT{
+	expected := []qot.QoT{
 		{
-			Quantity:     5,
-			RelativeTime: 0,
+			Quantity: 5,
+			Time:     0,
 		},
 		{
-			Quantity:     2,
-			RelativeTime: 10 * time.Millisecond,
+			Quantity: 2,
+			Time:     10 * time.Millisecond,
 		},
 		{
-			Quantity:     1,
-			RelativeTime: 20 * time.Millisecond,
+			Quantity: 1,
+			Time:     20 * time.Millisecond,
 		},
 	}
 
-	quantities, calcInterval := CalcIntervalQuantities(
-		relativeTimes,
-		0,
-		interval,
-	)
+	quantities, actualInterval := QuantityPerInterval(times, 0, interval)
 	require.Equal(t, expected, quantities)
-	require.Equal(t, interval, calcInterval)
+	require.Equal(t, interval, actualInterval)
 }
 
-func TestCalcIntervalQuantitiesSplitByIntervalsQuantity(t *testing.T) {
-	relativeTimes := []time.Duration{
+func TestQuantityPerIntervalSplitByIntervalsNumber(t *testing.T) {
+	times := []time.Duration{
 		0,
 		time.Millisecond,
 		2 * time.Millisecond,
@@ -119,124 +111,104 @@ func TestCalcIntervalQuantitiesSplitByIntervalsQuantity(t *testing.T) {
 		17 * time.Millisecond,
 	}
 
-	intervalsQuantity := 2
+	intervalsNumber := 2
 
-	expectedCalcInterval := 8*time.Millisecond + 500*time.Microsecond + time.Nanosecond
+	expectedInterval := 8*time.Millisecond + 500*time.Microsecond + time.Nanosecond
 
-	expected := []qot.QOT{
+	expected := []qot.QoT{
 		{
-			Quantity:     4,
-			RelativeTime: 0,
+			Quantity: 4,
+			Time:     0,
 		},
 		{
-			Quantity:     4,
-			RelativeTime: expectedCalcInterval,
+			Quantity: 4,
+			Time:     expectedInterval,
 		},
 	}
 
-	quantities, calcInterval := CalcIntervalQuantities(
-		relativeTimes,
-		intervalsQuantity,
-		0,
-	)
+	quantities, actualInterval := QuantityPerInterval(times, intervalsNumber, 0)
 	require.Equal(t, expected, quantities)
-	require.Equal(t, expectedCalcInterval, calcInterval)
+	require.Equal(t, expectedInterval, actualInterval)
 }
 
-func TestCalcIntervalQuantitiesZeroInput(t *testing.T) {
-	quantities, calcInterval := CalcIntervalQuantities(
-		nil,
-		0,
-		time.Second,
-	)
-	require.Equal(t, []qot.QOT(nil), quantities)
-	require.Equal(t, time.Duration(0), calcInterval)
+func TestQuantityPerIntervalZeroInput(t *testing.T) {
+	quantities, actualInterval := QuantityPerInterval(nil, 0, time.Second)
+	require.Equal(t, []qot.QoT(nil), quantities)
+	require.Equal(t, time.Duration(0), actualInterval)
 
-	quantities, calcInterval = CalcIntervalQuantities(
-		[]time.Duration{},
-		0,
-		time.Second,
-	)
-	require.Equal(t, []qot.QOT(nil), quantities)
-	require.Equal(t, time.Duration(0), calcInterval)
+	quantities, actualInterval = QuantityPerInterval([]time.Duration{}, 0, time.Second)
+	require.Equal(t, []qot.QoT(nil), quantities)
+	require.Equal(t, time.Duration(0), actualInterval)
 }
 
-func TestCalcIntervalQuantitiesZeroSplit(t *testing.T) {
-	quantities, calcInterval := CalcIntervalQuantities(
-		[]time.Duration{1, 2},
-		0,
-		0,
-	)
-	require.Equal(t, []qot.QOT(nil), quantities)
-	require.Equal(t, time.Duration(0), calcInterval)
+func TestQuantityPerIntervalZeroSplit(t *testing.T) {
+	quantities, actualInterval := QuantityPerInterval([]time.Duration{1, 2}, 0, 0)
+	require.Equal(t, []qot.QoT(nil), quantities)
+	require.Equal(t, time.Duration(0), actualInterval)
 }
 
-func TestCalcIntervalQuantitiesSmallRatio(t *testing.T) {
-	relativeTimes := []time.Duration{
+func TestQuantityPerIntervalSmallRatio(t *testing.T) {
+	times := []time.Duration{
 		0,
 		time.Nanosecond,
 		2 * time.Nanosecond,
 		5 * time.Nanosecond,
 	}
 
-	intervalsQuantity := 10
+	intervalsNumber := 10
 
-	expectedCalcInterval := time.Nanosecond
+	expectedInterval := time.Nanosecond
 
-	expected := []qot.QOT{
+	expected := []qot.QoT{
 		{
-			Quantity:     1,
-			RelativeTime: 0,
+			Quantity: 1,
+			Time:     0,
 		},
 		{
-			Quantity:     1,
-			RelativeTime: 1,
+			Quantity: 1,
+			Time:     1,
 		},
 		{
-			Quantity:     1,
-			RelativeTime: 2,
+			Quantity: 1,
+			Time:     2,
 		},
 		{
-			Quantity:     0,
-			RelativeTime: 3,
+			Quantity: 0,
+			Time:     3,
 		},
 		{
-			Quantity:     0,
-			RelativeTime: 4,
+			Quantity: 0,
+			Time:     4,
 		},
 		{
-			Quantity:     1,
-			RelativeTime: 5,
+			Quantity: 1,
+			Time:     5,
 		},
 		{
-			Quantity:     0,
-			RelativeTime: 6,
+			Quantity: 0,
+			Time:     6,
 		},
 		{
-			Quantity:     0,
-			RelativeTime: 7,
+			Quantity: 0,
+			Time:     7,
 		},
 		{
-			Quantity:     0,
-			RelativeTime: 8,
+			Quantity: 0,
+			Time:     8,
 		},
 		{
-			Quantity:     0,
-			RelativeTime: 9,
+			Quantity: 0,
+			Time:     9,
 		},
 	}
 
-	quantities, calcInterval := CalcIntervalQuantities(
-		relativeTimes,
-		intervalsQuantity,
-		0,
-	)
+	quantities, actualInterval := QuantityPerInterval(times, intervalsNumber, 0)
 	require.Equal(t, expected, quantities)
-	require.Equal(t, expectedCalcInterval, calcInterval)
+	require.Equal(t, expectedInterval, actualInterval)
 }
 
-func TestCalcRelativeDeviations(t *testing.T) {
-	relativeTimes := []time.Duration{
+func TestDeviations(t *testing.T) {
+	times := []time.Duration{
 		-100 * time.Microsecond,
 		900 * time.Microsecond,
 		900 * time.Microsecond,
@@ -267,15 +239,15 @@ func TestCalcRelativeDeviations(t *testing.T) {
 	expected[10] = 3
 	expected[100] = 2
 
-	deviations := CalcRelativeDeviations(relativeTimes, time.Millisecond)
+	deviations := Deviations(times, time.Millisecond)
 	require.Equal(t, expected, deviations)
 }
 
-func TestCalcRelativeDeviationsZeroInput(t *testing.T) {
-	deviations := CalcRelativeDeviations(nil, time.Millisecond)
+func TestDeviationsZeroInput(t *testing.T) {
+	deviations := Deviations(nil, time.Millisecond)
 	require.Equal(t, map[int]int(nil), deviations)
 
-	deviations = CalcRelativeDeviations([]time.Duration{}, time.Millisecond)
+	deviations = Deviations([]time.Duration{}, time.Millisecond)
 	require.Equal(t, map[int]int(nil), deviations)
 }
 
@@ -287,50 +259,50 @@ func TestConvertRelativeDeviationsToBarEcharts(t *testing.T) {
 		80:  1,
 	}
 
-	expectedY := []chartsopts.BarData{
+	expectedAxisY := []chartsopts.BarData{
 		{
 			Name:  "-10%",
 			Value: 2,
 			Tooltip: &chartsopts.Tooltip{
-				Show: true,
+				Show: chartsopts.Bool(true),
 			},
 		},
 		{
 			Name:  "0%",
 			Value: 10,
 			Tooltip: &chartsopts.Tooltip{
-				Show: true,
+				Show: chartsopts.Bool(true),
 			},
 		},
 		{
 			Name:  "10%",
 			Value: 3,
 			Tooltip: &chartsopts.Tooltip{
-				Show: true,
+				Show: chartsopts.Bool(true),
 			},
 		},
 		{
 			Name:  "80%",
 			Value: 1,
 			Tooltip: &chartsopts.Tooltip{
-				Show: true,
+				Show: chartsopts.Bool(true),
 			},
 		},
 	}
 
-	expectedX := []int{
+	expectedAxisX := []int{
 		-10,
 		0,
 		10,
 		80,
 	}
 
-	axisY, axisX := ConvertRelativeDeviationsToBarEcharts(deviations)
-	require.Equal(t, expectedY, axisY)
-	require.Equal(t, expectedX, axisX)
+	axisY, axisX := DeviationsToBarChart(deviations)
+	require.Equal(t, expectedAxisY, axisY)
+	require.Equal(t, expectedAxisX, axisX)
 }
 
-func TestCalcTotalDuration(t *testing.T) {
+func TestTotalDuration(t *testing.T) {
 	durations := []time.Duration{
 		17 * time.Millisecond,
 		time.Millisecond,
@@ -342,8 +314,7 @@ func TestCalcTotalDuration(t *testing.T) {
 		0,
 	}
 
-	require.Equal(t, 17*time.Millisecond, CalcTotalDuration(durations))
-
-	require.Equal(t, time.Duration(0), CalcTotalDuration(nil))
-	require.Equal(t, time.Duration(0), CalcTotalDuration([]time.Duration{}))
+	require.Equal(t, time.Duration(0), TotalDuration(nil))
+	require.Equal(t, time.Duration(0), TotalDuration([]time.Duration{}))
+	require.Equal(t, 17*time.Millisecond, TotalDuration(durations))
 }

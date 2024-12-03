@@ -5,297 +5,162 @@ import (
 	"time"
 
 	"github.com/akramarenkov/flow/internal/qot"
-	"github.com/akramarenkov/flow/priority/internal/measurer"
+	"github.com/akramarenkov/flow/priority/internal/measuring"
 
 	chartsopts "github.com/go-echarts/go-echarts/v2/opts"
 	"github.com/stretchr/testify/require"
 )
 
-func TestCalcDataQuantity(t *testing.T) {
-	measures := []measurer.Measure{
+func TestQuantityPerInterval(t *testing.T) {
+	measurements := []measuring.Measure{
 		{
-			Data:         0,
-			Kind:         measurer.MeasureKindCompleted,
-			Priority:     1,
-			RelativeTime: 11 * time.Microsecond,
+			Item:     0,
+			Kind:     measuring.KindCompleted,
+			Priority: 1,
+			Time:     11 * time.Microsecond,
 		},
 		{
-			Data:         0,
-			Kind:         measurer.MeasureKindProcessed,
-			Priority:     1,
-			RelativeTime: 10 * time.Microsecond,
+			Item:     0,
+			Kind:     measuring.KindProcessed,
+			Priority: 1,
+			Time:     10 * time.Microsecond,
 		},
 		{
-			Data:         0,
-			Kind:         measurer.MeasureKindReceived,
-			Priority:     1,
-			RelativeTime: 0,
+			Item:     0,
+			Kind:     measuring.KindReceived,
+			Priority: 1,
+			Time:     0,
 		},
 		{
-			Data:         1,
-			Kind:         measurer.MeasureKindCompleted,
-			Priority:     2,
-			RelativeTime: 25 * time.Microsecond,
+			Item:     1,
+			Kind:     measuring.KindCompleted,
+			Priority: 2,
+			Time:     25 * time.Microsecond,
 		},
 		{
-			Data:         1,
-			Kind:         measurer.MeasureKindProcessed,
-			Priority:     2,
-			RelativeTime: 20 * time.Microsecond,
+			Item:     1,
+			Kind:     measuring.KindProcessed,
+			Priority: 2,
+			Time:     20 * time.Microsecond,
 		},
 		{
-			Data:         1,
-			Kind:         measurer.MeasureKindReceived,
-			Priority:     2,
-			RelativeTime: time.Microsecond,
+			Item:     1,
+			Kind:     measuring.KindReceived,
+			Priority: 2,
+			Time:     time.Microsecond,
 		},
 		{
-			Data:         2,
-			Kind:         measurer.MeasureKindProcessed,
-			Priority:     3,
-			RelativeTime: 30 * time.Microsecond,
+			Item:     2,
+			Kind:     measuring.KindProcessed,
+			Priority: 3,
+			Time:     30 * time.Microsecond,
 		},
 		{
-			Data:         2,
-			Kind:         measurer.MeasureKindCompleted,
-			Priority:     3,
-			RelativeTime: 33 * time.Microsecond,
+			Item:     2,
+			Kind:     measuring.KindCompleted,
+			Priority: 3,
+			Time:     33 * time.Microsecond,
 		},
 		{
-			Data:         2,
-			Kind:         measurer.MeasureKindReceived,
-			Priority:     3,
-			RelativeTime: 0,
+			Item:     2,
+			Kind:     measuring.KindReceived,
+			Priority: 3,
+			Time:     0,
 		},
 	}
 
-	resolution := 5 * time.Microsecond
+	interval := 5 * time.Microsecond
 
-	expected := map[uint][]qot.QOT{
+	expected := map[uint][]qot.QoT{
 		1: {
-			{
-				RelativeTime: -resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 0,
-				Quantity:     1,
-			},
-			{
-				RelativeTime: resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 2 * resolution,
-				Quantity:     2,
-			},
-			{
-				RelativeTime: 3 * resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 4 * resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 5 * resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 6 * resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 7 * resolution,
-				Quantity:     0,
-			},
+			{Quantity: 0, Time: -interval},
+			{Quantity: 1, Time: 0},
+			{Quantity: 0, Time: interval},
+			{Quantity: 2, Time: 2 * interval},
+			{Quantity: 0, Time: 3 * interval},
+			{Quantity: 0, Time: 4 * interval},
+			{Quantity: 0, Time: 5 * interval},
+			{Quantity: 0, Time: 6 * interval},
+			{Quantity: 0, Time: 7 * interval},
 		},
 		2: {
-			{
-				RelativeTime: -resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 0,
-				Quantity:     1,
-			},
-			{
-				RelativeTime: resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 2 * resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 3 * resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 4 * resolution,
-				Quantity:     1,
-			},
-			{
-				RelativeTime: 5 * resolution,
-				Quantity:     1,
-			},
-			{
-				RelativeTime: 6 * resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 7 * resolution,
-				Quantity:     0,
-			},
+			{Quantity: 0, Time: -interval},
+			{Quantity: 1, Time: 0},
+			{Quantity: 0, Time: interval},
+			{Quantity: 0, Time: 2 * interval},
+			{Quantity: 0, Time: 3 * interval},
+			{Quantity: 1, Time: 4 * interval},
+			{Quantity: 1, Time: 5 * interval},
+			{Quantity: 0, Time: 6 * interval},
+			{Quantity: 0, Time: 7 * interval},
 		},
 		3: {
-			{
-				RelativeTime: -resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 0,
-				Quantity:     1,
-			},
-			{
-				RelativeTime: resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 2 * resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 3 * resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 4 * resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 5 * resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 6 * resolution,
-				Quantity:     2,
-			},
-			{
-				RelativeTime: 7 * resolution,
-				Quantity:     0,
-			},
+			{Quantity: 0, Time: -interval},
+			{Quantity: 1, Time: 0},
+			{Quantity: 0, Time: interval},
+			{Quantity: 0, Time: 2 * interval},
+			{Quantity: 0, Time: 3 * interval},
+			{Quantity: 0, Time: 4 * interval},
+			{Quantity: 0, Time: 5 * interval},
+			{Quantity: 2, Time: 6 * interval},
+			{Quantity: 0, Time: 7 * interval},
 		},
 	}
 
-	quantities := CalcDataQuantity(measures, resolution)
+	quantities := QuantityPerInterval(measurements, interval)
 	require.Equal(t, expected, quantities)
 }
 
-func TestCalcDataQuantityZeroInput(t *testing.T) {
-	quantities := CalcDataQuantity(nil, 5*time.Microsecond)
-	require.Equal(t, map[uint][]qot.QOT(nil), quantities)
+func TestQuantityPerIntervalZeroInput(t *testing.T) {
+	quantities := QuantityPerInterval(nil, 5*time.Microsecond)
+	require.Equal(t, map[uint][]qot.QoT(nil), quantities)
 
-	quantities = CalcDataQuantity([]measurer.Measure{}, 5*time.Microsecond)
-	require.Equal(t, map[uint][]qot.QOT(nil), quantities)
+	quantities = QuantityPerInterval([]measuring.Measure{}, 5*time.Microsecond)
+	require.Equal(t, map[uint][]qot.QoT(nil), quantities)
 }
 
-func TestConvertToLineEcharts(t *testing.T) {
-	resolution := 5 * time.Microsecond
+func TestQotToLineChart(t *testing.T) {
+	interval := 5 * time.Microsecond
 
-	quantities := map[uint][]qot.QOT{
+	quantities := map[uint][]qot.QoT{
 		1: {
-			{
-				RelativeTime: -resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 0,
-				Quantity:     1,
-			},
-			{
-				RelativeTime: resolution,
-				Quantity:     0,
-			},
+			{Quantity: 0, Time: -interval},
+			{Quantity: 1, Time: 0},
+			{Quantity: 0, Time: interval},
 		},
 		2: {
-			{
-				RelativeTime: -resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 0,
-				Quantity:     2,
-			},
-			{
-				RelativeTime: resolution,
-				Quantity:     0,
-			},
+			{Quantity: 0, Time: -interval},
+			{Quantity: 2, Time: 0},
+			{Quantity: 0, Time: interval},
 		},
 		3: {
-			{
-				RelativeTime: -resolution,
-				Quantity:     0,
-			},
-			{
-				RelativeTime: 0,
-				Quantity:     3,
-			},
-			{
-				RelativeTime: resolution,
-				Quantity:     0,
-			},
+			{Quantity: 0, Time: -interval},
+			{Quantity: 3, Time: 0},
+			{Quantity: 0, Time: interval},
 		},
 	}
 
-	expectedY := map[uint][]chartsopts.LineData{
+	expectedAxisY := map[uint][]chartsopts.LineData{
 		1: {
-			{
-				Name:  "-5µs",
-				Value: uint(0),
-			},
-			{
-				Name:  "0s",
-				Value: uint(1),
-			},
-			{
-				Name:  "5µs",
-				Value: uint(0),
-			},
+			{Value: uint(0), Name: "-5µs"},
+			{Value: uint(1), Name: "0s"},
+			{Value: uint(0), Name: "5µs"},
 		},
 		2: {
-			{
-				Name:  "-5µs",
-				Value: uint(0),
-			},
-			{
-				Name:  "0s",
-				Value: uint(2),
-			},
-			{
-				Name:  "5µs",
-				Value: uint(0),
-			},
+			{Value: uint(0), Name: "-5µs"},
+			{Value: uint(2), Name: "0s"},
+			{Value: uint(0), Name: "5µs"},
 		},
 		3: {
-			{
-				Name:  "-5µs",
-				Value: uint(0),
-			},
-			{
-				Name:  "0s",
-				Value: uint(3),
-			},
-			{
-				Name:  "5µs",
-				Value: uint(0),
-			},
+			{Value: uint(0), Name: "-5µs"},
+			{Value: uint(3), Name: "0s"},
+			{Value: uint(0), Name: "5µs"},
 		},
 	}
 
-	expectedX := []int{-5, 0, 5}
+	expectedAxisX := []int{-5, 0, 5}
 
-	axisY, axisX := ConvertToLineEcharts(quantities, time.Microsecond)
-	require.Equal(t, expectedY, axisY)
-	require.Equal(t, expectedX, axisX)
+	axisY, axisX := QotToLineChart(quantities, time.Microsecond)
+	require.Equal(t, expectedAxisY, axisY)
+	require.Equal(t, expectedAxisX, axisX)
 }
