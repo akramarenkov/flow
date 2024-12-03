@@ -24,7 +24,7 @@ func ExampleDiscipline() {
 	inputCapacity := handlersQuantity
 	processingDuration := 10 * time.Millisecond
 	graphInterval := 100 * time.Millisecond
-	graphRange := 5 * time.Second
+	graphRangeExtension := 500 * time.Millisecond
 
 	inputs := map[uint]chan int{
 		70: make(chan int, inputCapacity),
@@ -94,6 +94,8 @@ func ExampleDiscipline() {
 	if err := <-discipline.Err(); err != nil {
 		fmt.Println("An error was received: ", err)
 	}
+
+	graphRange := time.Since(startedAt) + graphRangeExtension
 
 	close(measurements)
 
