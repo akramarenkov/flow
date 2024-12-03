@@ -299,6 +299,44 @@ func TestDisciplineErrorInPlayThree(t *testing.T) {
 			return divider.Fair(quantity, priorities, distribution)
 		}
 
+		if len(priorities) == 2 {
+			distribution[priorities[0]] = quantity
+			return nil
+		}
+
+		return divider.Fair(quantity, priorities, distribution)
+	}
+
+	opts := Opts[uint]{
+		Divider:          wrong,
+		HandlersQuantity: msr.HandlersQuantity(),
+		Inputs:           msr.Inputs(),
+	}
+
+	discipline, err := New(opts)
+	require.NoError(t, err)
+
+	_, err = msr.Play(discipline)
+	require.Error(t, err)
+}
+
+func TestDisciplineErrorInPlayFour(t *testing.T) {
+	msr, err := measuring.NewMeasurer(6)
+	require.NoError(t, err)
+
+	msr.AddWrite(1, 100000)
+	msr.AddWrite(2, 100000)
+	msr.AddWrite(3, 0)
+
+	calls := 0
+
+	wrong := func(quantity uint, priorities []uint, distribution map[uint]uint) error {
+		calls++
+
+		if calls == 1 {
+			return divider.Fair(quantity, priorities, distribution)
+		}
+
 		if len(priorities) == 3 {
 			return divider.Fair(quantity, priorities, distribution)
 		}

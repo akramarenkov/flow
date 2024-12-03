@@ -304,12 +304,12 @@ func (dsc *Discipline[Type]) distribute() (uint, error) {
 
 	distributed += dsc.transfer(dsc.unachieved)
 
-	filled, err := dsc.fillOperative()
+	proceed, err := dsc.fillOperative()
 	if err != nil {
 		return distributed, err
 	}
 
-	if !filled {
+	if !proceed {
 		return distributed, nil
 	}
 
@@ -404,7 +404,11 @@ func (dsc *Discipline[Type]) fillOperative() (bool, error) {
 		return false, err
 	}
 
-	return distrib.IsFilled(dsc.useful, dsc.operative), nil
+	if !distrib.IsFilled(dsc.useful, dsc.operative) {
+		return false, ErrDividerBad
+	}
+
+	return true, nil
 }
 
 func (dsc *Discipline[Type]) prepareUseful() {
