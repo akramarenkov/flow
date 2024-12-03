@@ -339,7 +339,7 @@ func (dsc *Discipline[Type]) waitFillingUnachieved() error {
 
 // Fills tactical distribution for unachieved priorities.
 func (dsc *Discipline[Type]) fillUnachieved() (bool, error) {
-	vacant := dsc.countVacantHandlers()
+	vacant := dsc.vacantHandlers()
 
 	if vacant == 0 {
 		return false, nil
@@ -355,13 +355,13 @@ func (dsc *Discipline[Type]) fillUnachieved() (bool, error) {
 	return distrib.IsFilled(dsc.unachieved, dsc.tactic), nil
 }
 
-func (dsc *Discipline[Type]) countVacantHandlers() uint {
+func (dsc *Discipline[Type]) vacantHandlers() uint {
 	// integer overflow or incorrect counting are not possible here because
 	// the correctness of the distribution is checked at each dividing
-	return dsc.opts.HandlersQuantity - dsc.countBusyHandlers()
+	return dsc.opts.HandlersQuantity - dsc.busyHandlers()
 }
 
-func (dsc *Discipline[Type]) countBusyHandlers() uint {
+func (dsc *Discipline[Type]) busyHandlers() uint {
 	busy := uint(0)
 
 	// integer overflow or incorrect counting are not possible here because
@@ -374,12 +374,6 @@ func (dsc *Discipline[Type]) countBusyHandlers() uint {
 	return busy
 }
 
-func (dsc *Discipline[Type]) resetTactic() {
-	for _, priority := range dsc.priorities {
-		dsc.tactic[priority] = 0
-	}
-}
-
 func (dsc *Discipline[Type]) prepareUnachieved() {
 	dsc.unachieved = dsc.unachieved[:0]
 
@@ -390,18 +384,9 @@ func (dsc *Discipline[Type]) prepareUnachieved() {
 	}
 }
 
-func (dsc *Discipline[Type]) waitFillingUnreached() error {
-	for {
-		filled, err := dsc.fillUnreached()
-		if err != nil {
-			return err
-		}
-
-		if filled {
-			return nil
-		}
-
-		dsc.waitRelease()
+func (dsc *Discipline[Type]) resetTactic() {
+	for _, priority := range dsc.priorities {
+		dsc.tactic[priority] = 0
 	}
 }
 
@@ -441,8 +426,23 @@ func (dsc *Discipline[Type]) resetOperative() {
 	}
 }
 
+func (dsc *Discipline[Type]) waitFillingUnreached() error {
+	for {
+		filled, err := dsc.fillUnreached()
+		if err != nil {
+			return err
+		}
+
+		if filled {
+			return nil
+		}
+
+		dsc.waitRelease()
+	}
+}
+
 func (dsc *Discipline[Type]) fillUnreached() (bool, error) {
-	vacant := dsc.countVacantHandlers()
+	vacant := dsc.vacantHandlers()
 
 	if vacant == 0 {
 		return false, nil
