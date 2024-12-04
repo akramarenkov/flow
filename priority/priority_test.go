@@ -491,6 +491,30 @@ func BenchmarkUnmanaged600Unbuffered(b *testing.B) {
 	benchmarkUnmanaged(b, 600, 0)
 }
 
+func BenchmarkDisciplineFair60InputCapacity0(b *testing.B) {
+	benchmarkDiscipline(b, divider.Fair, 60, 0)
+}
+
+func BenchmarkDisciplineFair60InputCapacity50(b *testing.B) {
+	benchmarkDiscipline(b, divider.Fair, 60, 30)
+}
+
+func BenchmarkDisciplineFair60InputCapacity100(b *testing.B) {
+	benchmarkDiscipline(b, divider.Fair, 60, 60)
+}
+
+func BenchmarkDisciplineFair60InputCapacity200(b *testing.B) {
+	benchmarkDiscipline(b, divider.Fair, 60, 120)
+}
+
+func BenchmarkDisciplineFair60InputCapacity300(b *testing.B) {
+	benchmarkDiscipline(b, divider.Fair, 60, 180)
+}
+
+func BenchmarkDisciplineFair60InputCapacity400(b *testing.B) {
+	benchmarkDiscipline(b, divider.Fair, 60, 240)
+}
+
 func benchmarkDiscipline(
 	b *testing.B,
 	divider types.Divider,

@@ -28,8 +28,8 @@ type Opts[Type any] struct {
 	HandlersQuantity uint
 	// Input channels of data items. For terminate the discipline it is necessary and
 	// sufficient to close all input channels. Preferably input channels should be
-	// buffered for performance reasons. Optimal capacity is in the range of 1 to 3
-	// times of quantity of data handlers
+	// buffered for performance reasons. Optimal capacity is equal to the quantity of
+	// data handlers
 	//
 	// Map key is a value of priority. Zero priority is not allowed
 	Inputs map[uint]<-chan Type

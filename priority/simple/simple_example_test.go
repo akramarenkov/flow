@@ -20,7 +20,7 @@ func ExampleDiscipline() {
 	handlersQuantity := uint(100)
 	itemsQuantity := 10000
 	// Preferably input channels should be buffered for performance reasons.
-	// Optimal capacity is in the range of 1 to 3 times of quantity of data handlers
+	// Optimal capacity is equal to the quantity of data handlers
 	inputCapacity := handlersQuantity
 	processingDuration := 10 * time.Millisecond
 	graphInterval := 100 * time.Millisecond
