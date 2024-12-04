@@ -29,7 +29,7 @@ type Opts[Type any] struct {
 	// sufficient to close all input channels. Preferably input channels should be
 	// buffered for performance reasons.
 	//
-	// Map key is a value of priority
+	// Map key is a value of priority. Zero priority is not allowed
 	Inputs map[uint]<-chan Type
 	// Quantity of data items for each priority that will not be written to the output
 	// channel

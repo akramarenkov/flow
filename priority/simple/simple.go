@@ -31,7 +31,7 @@ type Opts[Type any] struct {
 	// buffered for performance reasons. Optimal capacity is in the range of 1 to 3
 	// times of quantity of data handlers
 	//
-	// Map key is a value of priority
+	// Map key is a value of priority. Zero priority is not allowed
 	Inputs map[uint]<-chan Type
 }
 
