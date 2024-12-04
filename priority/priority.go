@@ -123,7 +123,7 @@ type Discipline[Type any] struct {
 	// then, at any previous input/output stages - interim main priority list
 	useful []uint
 
-	// actual distribution of data items by priorities
+	// actual distribution of data items
 	actual map[uint]uint
 	// distribution of data items filled by useful priority list and total quantity of
 	// data handlers - interim strategic distribution
@@ -366,7 +366,6 @@ func (dsc *Discipline[Type]) busyHandlers() uint {
 
 	// integer overflow or incorrect counting are not possible here because
 	// the correctness of the distribution is checked at each dividing
-
 	for _, priority := range dsc.priorities {
 		busy += dsc.actual[priority]
 	}
@@ -445,6 +444,7 @@ func (dsc *Discipline[Type]) waitFillingUnreached() error {
 	}
 }
 
+// Fills tactical distribution for unreached priorities.
 func (dsc *Discipline[Type]) fillUnreached() (bool, error) {
 	vacant := dsc.vacantHandlers()
 
