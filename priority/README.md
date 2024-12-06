@@ -42,6 +42,7 @@ package main
 import (
     "cmp"
     "fmt"
+    "maps"
     "os"
     "slices"
     "strconv"
@@ -181,15 +182,10 @@ func main() {
 
     // Preparing research data for plot
     serieses := make([][]float64, 0, len(quantities))
-    priorities := make([]uint, 0, len(quantities))
     legends := make([]string, 0, len(quantities))
 
-    for priority := range quantities {
-        priorities = append(priorities, priority)
-    }
-
     // To keep the legends in the same order
-    slices.SortFunc(priorities, priority.Compare)
+    priorities := slices.SortedFunc(maps.Keys(quantities), priority.Compare)
 
     for _, priority := range priorities {
         serieses = append(serieses, quantities[priority])

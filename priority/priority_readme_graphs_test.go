@@ -2,6 +2,7 @@ package priority
 
 import (
 	"fmt"
+	"maps"
 	"os"
 	"slices"
 	"testing"
@@ -114,14 +115,9 @@ func createReadmeGraph(
 	researched := research.QuantityPerInterval(received, graphInterval)
 
 	serieses := make([]chart.Series, 0, len(researched))
-	priorities := make([]uint, 0, len(researched))
-
-	for priority := range researched {
-		priorities = append(priorities, priority)
-	}
 
 	// To keep the legends in the same order
-	slices.SortFunc(priorities, Compare)
+	priorities := slices.SortedFunc(maps.Keys(researched), Compare)
 
 	for _, priority := range priorities {
 		xaxis := make([]float64, len(researched[priority]))

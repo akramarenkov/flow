@@ -3,6 +3,7 @@ package priority_test
 import (
 	"cmp"
 	"fmt"
+	"maps"
 	"os"
 	"slices"
 	"strconv"
@@ -14,7 +15,7 @@ import (
 	"github.com/guptarohit/asciigraph"
 )
 
-func ExampleDiscipline() { //nolint:gocognit
+func ExampleDiscipline() {
 	handlersQuantity := uint(100)
 	itemsQuantity := 10000
 	// Preferably input channels should be buffered for performance reasons.
@@ -142,15 +143,10 @@ func ExampleDiscipline() { //nolint:gocognit
 
 	// Preparing research data for plot
 	serieses := make([][]float64, 0, len(quantities))
-	priorities := make([]uint, 0, len(quantities))
 	legends := make([]string, 0, len(quantities))
 
-	for priority := range quantities {
-		priorities = append(priorities, priority)
-	}
-
 	// To keep the legends in the same order
-	slices.SortFunc(priorities, priority.Compare)
+	priorities := slices.SortedFunc(maps.Keys(quantities), priority.Compare)
 
 	for _, priority := range priorities {
 		serieses = append(serieses, quantities[priority])
