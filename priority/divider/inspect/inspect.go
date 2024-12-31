@@ -4,9 +4,9 @@ import (
 	"errors"
 	"math"
 
+	"github.com/akramarenkov/combin"
 	"github.com/akramarenkov/flow/internal/consts"
 	"github.com/akramarenkov/flow/priority/internal/distrib"
-	"github.com/akramarenkov/flow/priority/internal/priocombs"
 	"github.com/akramarenkov/flow/priority/types"
 	"github.com/akramarenkov/reusable"
 	"github.com/akramarenkov/safe"
@@ -40,7 +40,7 @@ func isQuantityPreserved(divider types.Divider, opts Opts) Result {
 	distribution := make(map[uint]uint, len(opts.Priorities))
 	priorities := reusable.New[uint](len(opts.Priorities))
 
-	for combination := range priocombs.Iter(opts.Priorities) {
+	for combination := range combin.Every(opts.Priorities) {
 		for quantity := range safe.Iter(0, opts.Quantity) {
 			clear(distribution)
 
@@ -101,7 +101,7 @@ func IsMonotonic(divider types.Divider, set []Opts) Result {
 func isMonotonic(divider types.Divider, opts Opts) Result {
 	priorities := reusable.New[uint](len(opts.Priorities))
 
-	for combination := range priocombs.Iter(opts.Priorities) {
+	for combination := range combin.Every(opts.Priorities) {
 		previous := make(map[uint]uint, len(combination))
 
 		for quantity := range safe.Iter(0, opts.Quantity) {
@@ -171,7 +171,7 @@ func IsNonFatalQuantity(divider types.Divider, opts Opts) Result {
 	distribution := make(map[uint]uint, len(opts.Priorities))
 	priorities := reusable.New[uint](len(opts.Priorities))
 
-	for combination := range priocombs.Iter(opts.Priorities) {
+	for combination := range combin.Every(opts.Priorities) {
 		clear(distribution)
 
 		// Protection against modification of slice by divider
@@ -253,7 +253,7 @@ func IsSuitableQuantity(divider types.Divider, opts Opts, suitableDiff float64) 
 	reference := make(map[uint]uint, len(opts.Priorities))
 	actual := make(map[uint]uint, len(opts.Priorities))
 
-	for combination := range priocombs.Iter(opts.Priorities) {
+	for combination := range combin.Every(opts.Priorities) {
 		clear(reference)
 		clear(actual)
 

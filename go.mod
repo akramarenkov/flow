@@ -1,18 +1,18 @@
 module github.com/akramarenkov/flow
 
-go 1.23.1
+go 1.23.4
 
 require (
 	github.com/akramarenkov/breaker v0.1.2
+	github.com/akramarenkov/combin v0.0.2
 	github.com/akramarenkov/reusable v0.1.4
-	github.com/akramarenkov/safe v0.18.0
-	github.com/akramarenkov/seq v0.4.0
+	github.com/akramarenkov/safe v0.20.0
 	github.com/akramarenkov/span v0.7.1
 	github.com/akramarenkov/starter v0.2.0
 	github.com/akramarenkov/stressor v0.1.0
 	github.com/go-echarts/go-echarts/v2 v2.4.4
 	github.com/guptarohit/asciigraph v0.7.3
-	github.com/stretchr/testify v1.9.0
+	github.com/stretchr/testify v1.10.0
 	github.com/wcharczuk/go-chart/v2 v2.1.2
 )
 

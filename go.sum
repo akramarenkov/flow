@@ -2,10 +2,12 @@ github.com/akramarenkov/alter v0.0.4 h1:MkCftWHuUAa2tN8Qi4QlU5F+yoCJ1TdgDJVSSb/7
 github.com/akramarenkov/alter v0.0.4/go.mod h1:8D8T9akTl2+Qi+USXS3VTU/T5Ck84nx2jPn5iygn3GM=
 github.com/akramarenkov/breaker v0.1.2 h1:L8xC2aTQwS3IQiyg5tXE0HbBv6HjLrn4Aqwit79E7fY=
 github.com/akramarenkov/breaker v0.1.2/go.mod h1:SmNRpU2yUKa0S29rtwtvI0wbawyYfcO0kDWko0WjEBI=
+github.com/akramarenkov/combin v0.0.2 h1:1Dne5tU14GekG8TlFiwVrVh8KFv32M5mHkoMDAHwjWk=
+github.com/akramarenkov/combin v0.0.2/go.mod h1:rxIi0Y4PB5m8mpXXDZNjZ6r4zE7y7sNS9mBRx8uRdnc=
 github.com/akramarenkov/reusable v0.1.4 h1:zHo8Vo3tLlSTuvfuxZvXryrcU/DShcB637KpFcOpX6Q=
 github.com/akramarenkov/reusable v0.1.4/go.mod h1:AxQqV9QJM8yJpitHDaQlPari3TILx6pq7roVM/G8qdc=
-github.com/akramarenkov/safe v0.18.0 h1:3gKmwPsouT7n0lKdhDckPj537ZYB4psfQ3UTN7ukNpA=
-github.com/akramarenkov/safe v0.18.0/go.mod h1:JUqW1PfWQITWPydLduEg0LKR10cd25Zt0fhl9/QazhU=
+github.com/akramarenkov/safe v0.20.0 h1:ZQbc9MyjnNwYaXGbGQEpbgzSttkTe5Tdzz70tArwq3A=
+github.com/akramarenkov/safe v0.20.0/go.mod h1:JUqW1PfWQITWPydLduEg0LKR10cd25Zt0fhl9/QazhU=
 github.com/akramarenkov/seq v0.4.0 h1:C/ov1JIYLXDEQxQgk5M5FBlHCxGqP78GbaUqGvv8S7w=
 github.com/akramarenkov/seq v0.4.0/go.mod h1:NxbUtfwCqU7Po90QcGQQ3TDoBwDBBWSjBypnNW9zvPA=
 github.com/akramarenkov/span v0.7.1 h1:B5ktOJOK14bNjsmeiOBjQOTy5gECzTaGnHRXop/tEGQ=
@@ -38,8 +40,8 @@ github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZb
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
 github.com/rogpeppe/go-internal v1.9.0 h1:73kH8U+JUqXU8lRuOHeVHaa/SZPifC7BkcraZVejAe8=
 github.com/rogpeppe/go-internal v1.9.0/go.mod h1:WtVeX8xhTBvf0smdhujwtBcq4Qrzq/fJaraNFVN+nFs=
-github.com/stretchr/testify v1.9.0 h1:HtqpIVDClZ4nwg75+f6Lvsy/wHu+3BoSGCbBAcpTsTg=
-github.com/stretchr/testify v1.9.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
+github.com/stretchr/testify v1.10.0 h1:Xv5erBjTwe/5IxqUQTdXv5kgmIvbHo3QQyRwhJsOfJA=
+github.com/stretchr/testify v1.10.0/go.mod h1:r2ic/lqez/lEtzL7wO/rwa5dbSLXVDPFyf8C91i36aY=
 github.com/wcharczuk/go-chart/v2 v2.1.2 h1:Y17/oYNuXwZg6TFag06qe8sBajwwsuvPiJJXcUcLL6E=
 github.com/wcharczuk/go-chart/v2 v2.1.2/go.mod h1:Zi4hbaqlWpYajnXB2K22IUYVXRXaLfSGNNR7P4ukyyQ=
 github.com/yuin/goldmark v1.4.13/go.mod h1:6yULJ656Px+3vBD8DxQVa3kxgyrAnzto9xy5taEt/CY=
