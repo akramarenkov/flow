@@ -6,7 +6,7 @@
 
 ## Purpose
 
-Library that allows you to manage the flow of data between Go channels
+Library that provides data flow control between Go channels
 
 ## Implemented disciplines
 
