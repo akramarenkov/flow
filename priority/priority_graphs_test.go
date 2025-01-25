@@ -639,20 +639,19 @@ func createGraphs(
 	)
 
 	subtitle := fmt.Sprintf(
-		subtitleBase+
-			", "+
-			"handlers quantity: %d, "+
-			"unbuffered: %t, "+
-			"time: %s",
+		"%s, handlers quantity: %d, unbuffered: %t, time: %s",
+		subtitleBase,
 		handlersQuantity,
 		unbufferedInput,
 		time.Now().Format(time.RFC3339),
 	)
 
-	baseName := "graph_" + filePrefix + "_" +
-		strconv.FormatUint(uint64(handlersQuantity), consts.DecimalBase) +
-		"_unbuffered_" +
-		strconv.FormatBool(unbufferedInput)
+	baseName := fmt.Sprintf(
+		"graph_%s_%d_unbuffered_%t",
+		filePrefix,
+		handlersQuantity,
+		unbufferedInput,
+	)
 
 	createLineGraph(
 		t,
