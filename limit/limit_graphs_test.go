@@ -3,16 +3,14 @@ package limit
 import (
 	"fmt"
 	"os"
-	"strconv"
 	"testing"
 	"time"
 
-	"github.com/akramarenkov/flow/internal/consts"
 	"github.com/akramarenkov/flow/internal/env"
 	"github.com/akramarenkov/flow/limit/internal/research"
 	"github.com/akramarenkov/safe"
-
 	"github.com/akramarenkov/stressor"
+
 	"github.com/go-echarts/go-echarts/v2/charts"
 	chartsopts "github.com/go-echarts/go-echarts/v2/opts"
 	"github.com/stretchr/testify/require"
@@ -122,11 +120,12 @@ func createDelayerQuantitiesGraph(
 	expectedDuration := time.Duration(len(times)) * delay
 
 	subtitleAdd := fmt.Sprintf(
-		"duration: %s, "+fmtTotalDuration(expectedDuration, times),
+		"duration: %s, %s",
 		delay,
+		fmtTotalDuration(expectedDuration, times),
 	)
 
-	fileNameAdd := fileNamePerfix + "_quantities_duration_" + delay.String()
+	fileNameAdd := fmt.Sprintf("%s_quantities_duration_%s", fileNamePerfix, delay)
 
 	createGraph(
 		t,
@@ -154,12 +153,8 @@ func createDelayerDeviationsGraph(
 
 	axisY, axisX := research.DeviationsToBarChart(deviations)
 
-	subtitleAdd := fmt.Sprintf(
-		"duration: %s",
-		duration,
-	)
-
-	fileNameAdd := fileNamePerfix + "_deviations_duration_" + duration.String()
+	subtitleAdd := fmt.Sprintf("duration: %s", duration)
+	fileNameAdd := fmt.Sprintf("%s_deviations_duration_%s", fileNamePerfix, duration)
 
 	createGraph(
 		t,
@@ -334,17 +329,17 @@ func createQuantitiesGraph(
 	expectedDuration := time.Duration(len(times)) * limit.Interval / limitQuantity
 
 	subtitleAdd := fmt.Sprintf(
-		"limit: {quantity: %d, interval: %s}, "+
-			fmtTotalDuration(expectedDuration, times),
+		"limit: {quantity: %d, interval: %s}, %s",
+		limit.Quantity,
+		limit.Interval,
+		fmtTotalDuration(expectedDuration, times),
+	)
+
+	fileNameAdd := fmt.Sprintf(
+		"quantities_limit_quantity_%d_limit_interval_%s",
 		limit.Quantity,
 		limit.Interval,
 	)
-
-	fileNameAdd := "quantities_" +
-		"limit_quantity_" +
-		strconv.FormatUint(limit.Quantity, consts.DecimalBase) +
-		"_limit_interval_" +
-		limit.Interval.String()
 
 	createGraph(
 		t,
@@ -373,24 +368,20 @@ func createGraph(
 	abscissa interface{},
 ) {
 	subtitle := fmt.Sprintf(
-		"Total quantity: %d, "+
-			"graph interval: %s, "+
-			subtitleAdd+", "+
-			"stress system: %t, "+
-			"time: %s",
+		"Total quantity: %d, graph interval: %s, %s, stress system: %t, time: %s",
 		totalQuantity,
 		graphInterval,
+		subtitleAdd,
 		stress,
 		time.Now().Format(time.RFC3339),
 	)
 
-	fileName := "graph_" +
-		strconv.Itoa(totalQuantity) +
-		"_" +
-		fileNameAdd +
-		"_stress_" +
-		strconv.FormatBool(stress) +
-		".html"
+	fileName := fmt.Sprintf(
+		"graph_%d_%s_stress_%t.html",
+		totalQuantity,
+		fileNameAdd,
+		stress,
+	)
 
 	createBarGraph(
 		t,
@@ -439,11 +430,11 @@ func createBarGraph(
 }
 
 func fmtTotalDuration(expected time.Duration, times []time.Duration) string {
-	out := fmt.Sprintf(
+	formatted := fmt.Sprintf(
 		"total duration: {expected:  %s, actual: %s}",
 		expected,
 		research.TotalDuration(times),
 	)
 
-	return out
+	return formatted
 }
