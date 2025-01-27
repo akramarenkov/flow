@@ -7,8 +7,9 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/akramarenkov/breaker/closing"
 	"github.com/akramarenkov/flow/priority/types"
+
+	"github.com/akramarenkov/breaker/closing"
 )
 
 var (

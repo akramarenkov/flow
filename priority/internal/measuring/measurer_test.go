@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/akramarenkov/flow/priority/internal/unmanaged"
+
 	"github.com/stretchr/testify/require"
 )
 

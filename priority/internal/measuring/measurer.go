@@ -4,8 +4,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/akramarenkov/breaker/closing"
 	"github.com/akramarenkov/flow/priority/types"
+
+	"github.com/akramarenkov/breaker/closing"
 	"github.com/akramarenkov/span"
 	"github.com/akramarenkov/starter"
 )
