@@ -4,7 +4,7 @@ package simple
 import (
 	"errors"
 
-	prioritydsc "github.com/akramarenkov/flow/priority"
+	priocore "github.com/akramarenkov/flow/priority"
 	"github.com/akramarenkov/flow/priority/types"
 )
 
@@ -38,11 +38,11 @@ type Opts[Type any] struct {
 // Adds an input channel with the specified priority to the inputs map.
 func (opts *Opts[Type]) AddInput(priority uint, channel <-chan Type) error {
 	if priority == 0 {
-		return prioritydsc.ErrPriorityZero
+		return priocore.ErrPriorityZero
 	}
 
 	if channel == nil {
-		return prioritydsc.ErrInputEmpty
+		return priocore.ErrInputEmpty
 	}
 
 	if opts.Inputs == nil {
@@ -50,7 +50,7 @@ func (opts *Opts[Type]) AddInput(priority uint, channel <-chan Type) error {
 	}
 
 	if stored := opts.Inputs[priority]; stored != nil {
-		return prioritydsc.ErrInputExists
+		return priocore.ErrInputExists
 	}
 
 	opts.Inputs[priority] = channel
@@ -70,7 +70,7 @@ func (opts Opts[Type]) isValid() error {
 type Discipline[Type any] struct {
 	opts Opts[Type]
 
-	priority *prioritydsc.Discipline[Type]
+	core *priocore.Discipline[Type]
 }
 
 // Creates and runs discipline.
@@ -79,8 +79,8 @@ func New[Type any](opts Opts[Type]) (*Discipline[Type], error) {
 		return nil, err
 	}
 
-	priority, err := prioritydsc.New(
-		prioritydsc.Opts[Type]{
+	core, err := priocore.New(
+		priocore.Opts[Type]{
 			Divider:          opts.Divider,
 			HandlersQuantity: opts.HandlersQuantity,
 			Inputs:           opts.Inputs,
@@ -93,7 +93,7 @@ func New[Type any](opts Opts[Type]) (*Discipline[Type], error) {
 	dsc := &Discipline[Type]{
 		opts: opts,
 
-		priority: priority,
+		core: core,
 	}
 
 	dsc.main()
@@ -112,7 +112,7 @@ func New[Type any](opts Opts[Type]) (*Discipline[Type], error) {
 // in it, then you are not obliged to read from this channel and you are not obliged
 // to check the received value.
 func (dsc *Discipline[Type]) Err() <-chan error {
-	return dsc.priority.Err()
+	return dsc.core.Err()
 }
 
 func (dsc *Discipline[Type]) main() {
@@ -122,8 +122,8 @@ func (dsc *Discipline[Type]) main() {
 }
 
 func (dsc *Discipline[Type]) handler() {
-	for prioritized := range dsc.priority.Output() {
+	for prioritized := range dsc.core.Output() {
 		dsc.opts.Handle(prioritized)
-		dsc.priority.Release(prioritized.Priority)
+		dsc.core.Release(prioritized.Priority)
 	}
 }
