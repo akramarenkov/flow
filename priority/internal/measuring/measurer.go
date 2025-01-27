@@ -82,12 +82,12 @@ func (msr *Measurer) HandlersQuantity() uint {
 // Adds to the actions list a write of the specified quantity of data items to the input
 // (for the discipline) channel of the specified priority.
 func (msr *Measurer) AddWrite(priority uint, quantity uint) {
-	action := action{
+	act := action{
 		Kind:     actionKindWrite,
 		Quantity: quantity,
 	}
 
-	msr.addAction(priority, action)
+	msr.addAction(priority, act)
 }
 
 // Adds to the actions list a write of the specified quantity of data items to the input
@@ -95,33 +95,33 @@ func (msr *Measurer) AddWrite(priority uint, quantity uint) {
 //
 // Before writing each data item, the specified delay occurs.
 func (msr *Measurer) AddWriteWithDelay(priority uint, quantity uint, delay time.Duration) {
-	action := action{
+	act := action{
 		Delay:    delay,
 		Kind:     actionKindWriteWithDelay,
 		Quantity: quantity,
 	}
 
-	msr.addAction(priority, action)
+	msr.addAction(priority, act)
 }
 
 // Adds to the actions list a waiting for the input (for the discipline) channel to
 // be devastated.
 func (msr *Measurer) AddWaitDevastation(priority uint) {
-	action := action{
+	act := action{
 		Kind: actionKindWaitDevastation,
 	}
 
-	msr.addAction(priority, action)
+	msr.addAction(priority, act)
 }
 
 // Adds to the actions list a delay in further execution of actions.
 func (msr *Measurer) AddDelay(priority uint, delay time.Duration) {
-	action := action{
+	act := action{
 		Kind:  actionKindDelay,
 		Delay: delay,
 	}
 
-	msr.addAction(priority, action)
+	msr.addAction(priority, act)
 }
 
 func (msr *Measurer) addAction(priority uint, action action) {
