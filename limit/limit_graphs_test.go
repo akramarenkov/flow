@@ -8,9 +8,9 @@ import (
 
 	"github.com/akramarenkov/flow/internal/env"
 	"github.com/akramarenkov/flow/limit/internal/research"
+
 	"github.com/akramarenkov/safe"
 	"github.com/akramarenkov/stressor"
-
 	"github.com/go-echarts/go-echarts/v2/charts"
 	chartsopts "github.com/go-echarts/go-echarts/v2/opts"
 	"github.com/stretchr/testify/require"

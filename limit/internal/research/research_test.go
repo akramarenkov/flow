@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/akramarenkov/flow/internal/qot"
+
 	chartsopts "github.com/go-echarts/go-echarts/v2/opts"
 	"github.com/stretchr/testify/require"
 )
