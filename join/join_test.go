@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/akramarenkov/flow/join/internal/defaults"
-	"github.com/akramarenkov/safe"
 
+	"github.com/akramarenkov/safe"
 	"github.com/stretchr/testify/require"
 )
 
