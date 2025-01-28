@@ -1,7 +1,11 @@
 // Internal package used to calculate distribution parameters.
 package distrib
 
-import "github.com/akramarenkov/safe"
+import (
+	"fmt"
+
+	"github.com/akramarenkov/safe"
+)
 
 // Calculates the total quantity in the distribution for specified priorities.
 func Quantity(priorities []uint, distribution map[uint]uint) (uint, error) {
@@ -14,7 +18,7 @@ func Quantity(priorities []uint, distribution map[uint]uint) (uint, error) {
 	for _, priority := range priorities {
 		sum, err := safe.AddU(quantity, distribution[priority])
 		if err != nil {
-			return 0, err
+			return 0, fmt.Errorf("calculation of total quantity in distribution: %w", err)
 		}
 
 		quantity = sum

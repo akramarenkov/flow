@@ -3,6 +3,8 @@
 package divider
 
 import (
+	"fmt"
+
 	"github.com/akramarenkov/safe"
 )
 
@@ -54,7 +56,7 @@ func Fair(quantity uint, priorities []uint, distribution map[uint]uint) error {
 func Rate(quantity uint, priorities []uint, distribution map[uint]uint) error {
 	divider, err := safe.AddMU(priorities...)
 	if err != nil {
-		return err
+		return fmt.Errorf("calculation of the sum of priorities: %w", err)
 	}
 
 	base := quantity / divider
