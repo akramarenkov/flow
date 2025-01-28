@@ -9,8 +9,8 @@ import (
 	"github.com/akramarenkov/flow/priority/internal/research"
 	"github.com/akramarenkov/flow/priority/internal/unmanaged"
 	"github.com/akramarenkov/flow/priority/types"
-	"github.com/akramarenkov/safe"
 
+	"github.com/akramarenkov/safe"
 	"github.com/stretchr/testify/require"
 )
 
