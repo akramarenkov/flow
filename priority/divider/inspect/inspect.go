@@ -4,10 +4,11 @@ import (
 	"errors"
 	"math"
 
-	"github.com/akramarenkov/combin"
 	"github.com/akramarenkov/flow/internal/consts"
 	"github.com/akramarenkov/flow/priority/internal/distrib"
 	"github.com/akramarenkov/flow/priority/types"
+
+	"github.com/akramarenkov/combin"
 	"github.com/akramarenkov/reusable"
 	"github.com/akramarenkov/safe"
 )

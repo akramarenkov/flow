@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"github.com/akramarenkov/flow/priority/divider"
+
 	"github.com/akramarenkov/safe"
 	"github.com/stretchr/testify/require"
 )
