@@ -82,7 +82,7 @@ func (msr *Measurer) HandlersQuantity() uint {
 
 // Adds to the actions list a write of the specified quantity of data items to the input
 // (for the discipline) channel of the specified priority.
-func (msr *Measurer) AddWrite(priority uint, quantity uint) {
+func (msr *Measurer) AddWrite(priority, quantity uint) {
 	act := action{
 		Kind:     actionKindWrite,
 		Quantity: quantity,
@@ -95,7 +95,7 @@ func (msr *Measurer) AddWrite(priority uint, quantity uint) {
 // (for the discipline) channel of the specified priority.
 //
 // Before writing each data item, the specified delay occurs.
-func (msr *Measurer) AddWriteWithDelay(priority uint, quantity uint, delay time.Duration) {
+func (msr *Measurer) AddWriteWithDelay(priority, quantity uint, delay time.Duration) {
 	act := action{
 		Delay:    delay,
 		Kind:     actionKindWriteWithDelay,
@@ -271,7 +271,7 @@ func (msr *Measurer) writers() {
 	}
 }
 
-func (msr *Measurer) writer(priority uint, shift uint) {
+func (msr *Measurer) writer(priority, shift uint) {
 	defer msr.wg.Done()
 	defer close(msr.channels[priority])
 

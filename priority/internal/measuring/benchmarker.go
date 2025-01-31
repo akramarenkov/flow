@@ -44,7 +44,7 @@ func (bnch *Benchmarker) HandlersQuantity() uint {
 
 // Increases quantity of data items that will be written to the input (for the
 // discipline) channel of the specified priority.
-func (bnch *Benchmarker) AddItems(priority uint, quantity uint) {
+func (bnch *Benchmarker) AddItems(priority, quantity uint) {
 	bnch.itemsQuantity[priority] += quantity
 }
 

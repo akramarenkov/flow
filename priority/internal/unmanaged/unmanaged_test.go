@@ -133,7 +133,7 @@ func testDiscipline(
 	require.Equal(t, expected, received)
 }
 
-func isErrorExpected(itemsQuantity map[uint]uint, failAfter map[uint]uint) bool {
+func isErrorExpected(itemsQuantity, failAfter map[uint]uint) bool {
 	for priority, after := range failAfter {
 		if after != 0 && after <= itemsQuantity[priority] {
 			return true
@@ -143,7 +143,7 @@ func isErrorExpected(itemsQuantity map[uint]uint, failAfter map[uint]uint) bool 
 	return false
 }
 
-func decreaseByMisses(target map[uint]uint, misses map[uint]uint) {
+func decreaseByMisses(target, misses map[uint]uint) {
 	for priority := range target {
 		if target[priority] < misses[priority] {
 			target[priority] = 0
