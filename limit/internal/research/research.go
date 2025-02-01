@@ -60,8 +60,8 @@ func QuantityPerInterval(
 	for span := interval; span <= maxTime+interval; span += interval {
 		spanQuantities := uint(0)
 
-		for id, time := range times[edge:] {
-			if time >= span {
+		for id, moment := range times[edge:] {
+			if moment >= span {
 				edge += id
 				break
 			}

@@ -517,7 +517,7 @@ func BenchmarkDisciplineFair60InputCapacity400(b *testing.B) {
 
 func benchmarkDiscipline(
 	b *testing.B,
-	divider types.Divider,
+	divisor types.Divider,
 	handlersQuantity uint,
 	inputCapacity ...uint,
 ) {
@@ -532,7 +532,7 @@ func benchmarkDiscipline(
 	bnch.AddItems(1, itemsQuantity)
 
 	opts := Opts[uint]{
-		Divider:          divider,
+		Divider:          divisor,
 		HandlersQuantity: bnch.HandlersQuantity(),
 		Inputs:           bnch.Inputs(),
 	}

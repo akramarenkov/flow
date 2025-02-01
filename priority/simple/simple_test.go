@@ -77,7 +77,7 @@ func TestDisciplineError(t *testing.T) {
 	testDiscipline(t, wrong, true)
 }
 
-func testDiscipline(t *testing.T, divider types.Divider, isErrorExpected bool) {
+func testDiscipline(t *testing.T, divisor types.Divider, isErrorExpected bool) {
 	handlersQuantity := uint(6)
 	itemsQuantity := 100000
 	inputCapacity := handlersQuantity
@@ -97,13 +97,13 @@ func testDiscipline(t *testing.T, divider types.Divider, isErrorExpected bool) {
 	}
 
 	opts := Opts[int]{
-		Divider:          divider,
+		Divider:          divisor,
 		Handle:           handle,
 		HandlersQuantity: handlersQuantity,
 	}
 
-	for priority, channel := range inputs {
-		err := opts.AddInput(priority, channel)
+	for prio, channel := range inputs {
+		err := opts.AddInput(prio, channel)
 		require.NoError(t, err)
 	}
 

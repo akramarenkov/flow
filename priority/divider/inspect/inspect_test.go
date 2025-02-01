@@ -85,12 +85,12 @@ func TestIsMonotonic(t *testing.T) {
 
 func TestIsMonotonicNegativeConclusion(t *testing.T) {
 	unmonotonic := func(quantity uint, priorities []uint, distribution map[uint]uint) error {
-		divider, err := safe.AddMU(priorities...)
+		divisor, err := safe.AddMU(priorities...)
 		if err != nil {
 			return err
 		}
 
-		base := float64(quantity) / float64(divider)
+		base := float64(quantity) / float64(divisor)
 		remainder := quantity
 
 		for _, priority := range priorities {
