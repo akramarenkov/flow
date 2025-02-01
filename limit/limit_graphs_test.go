@@ -365,7 +365,7 @@ func createGraph(
 	graphInterval string,
 	stress bool,
 	series []chartsopts.BarData,
-	abscissa interface{},
+	abscissa any,
 ) {
 	subtitle := fmt.Sprintf(
 		"Total quantity: %d, graph interval: %s, %s, stress system: %t, time: %s",
@@ -401,7 +401,7 @@ func createBarGraph(
 	fileName string,
 	seriesName string,
 	series []chartsopts.BarData,
-	abscissa interface{},
+	abscissa any,
 ) {
 	if len(series) == 0 {
 		return
