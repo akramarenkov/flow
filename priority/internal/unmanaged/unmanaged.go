@@ -98,7 +98,7 @@ func (dsc *Discipline[Type]) Output() <-chan types.Prioritized[Type] {
 // data item.
 //
 // Does nothing, defined for compatibility with the priority discipline interface.
-func (dsc *Discipline[Type]) Release(uint) {
+func (*Discipline[Type]) Release(uint) {
 }
 
 // Returns a channel with errors. If an error occurs (the value from the channel
