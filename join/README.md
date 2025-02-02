@@ -55,8 +55,8 @@ func main() {
         }
     }()
 
-    for join := range discipline.Output() {
-        fmt.Println(join)
+    for joined := range discipline.Output() {
+        fmt.Println(joined)
         discipline.Release()
     }
     // Output:
