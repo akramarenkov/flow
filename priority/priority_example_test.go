@@ -161,8 +161,10 @@ func ExampleDiscipline() {
 		asciigraph.SeriesLegends(legends...),
 	)
 
-	fmt.Fprintln(os.Stderr, graph)
+	_, err = fmt.Fprintln(os.Stderr, graph)
+	fmt.Println(err)
 	fmt.Println("See graph")
 	// Output:
+	// <nil>
 	// See graph
 }

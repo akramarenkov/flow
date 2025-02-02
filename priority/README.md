@@ -91,8 +91,8 @@ func main() {
         HandlersQuantity: handlersQuantity,
     }
 
-    for priority, channel := range inputs {
-        if err := opts.AddInput(priority, channel); err != nil {
+    for prio, channel := range inputs {
+        if err := opts.AddInput(prio, channel); err != nil {
             panic(err)
         }
     }
@@ -161,7 +161,7 @@ func main() {
     quantities := make(map[uint][]float64)
 
     for span := time.Duration(0); span <= graphRange; span += graphInterval {
-        for priority, measurements := range received {
+        for prio, measurements := range received {
             quantity := float64(0)
 
             for _, measure := range measurements {
@@ -176,7 +176,7 @@ func main() {
                 quantity++
             }
 
-            quantities[priority] = append(quantities[priority], quantity)
+            quantities[prio] = append(quantities[prio], quantity)
         }
     }
 
@@ -187,9 +187,9 @@ func main() {
     // To keep the legends in the same order
     priorities := slices.SortedFunc(maps.Keys(quantities), priority.Compare)
 
-    for _, priority := range priorities {
-        serieses = append(serieses, quantities[priority])
-        legends = append(legends, strconv.FormatUint(uint64(priority), 10))
+    for _, prio := range priorities {
+        serieses = append(serieses, quantities[prio])
+        legends = append(legends, strconv.FormatUint(uint64(prio), 10))
     }
 
     graph := asciigraph.PlotMany(
@@ -200,9 +200,11 @@ func main() {
         asciigraph.SeriesLegends(legends...),
     )
 
-    fmt.Fprintln(os.Stderr, graph)
+    _, err = fmt.Fprintln(os.Stderr, graph)
+    fmt.Println(err)
     fmt.Println("See graph")
     // Output:
+    // <nil>
     // See graph
 }
 ```
