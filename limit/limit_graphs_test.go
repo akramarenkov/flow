@@ -38,7 +38,8 @@ func testGraphTicker(t *testing.T, quantity int, duration time.Duration, stress 
 	}
 
 	if stress {
-		defer stressor.New(stressor.Opts{}).Stop()
+		strain := stressor.New(stressor.Opts{})
+		defer strain.Stop()
 
 		time.Sleep(time.Second)
 	}
@@ -84,7 +85,8 @@ func testGraphSleep(t *testing.T, quantity int, duration time.Duration, stress b
 	}
 
 	if stress {
-		defer stressor.New(stressor.Opts{}).Stop()
+		strain := stressor.New(stressor.Opts{})
+		defer strain.Stop()
 
 		time.Sleep(time.Second)
 	}
@@ -276,7 +278,8 @@ func testGraphDiscipline(t *testing.T, quantity int, limit Rate, stress bool) {
 	}
 
 	if stress {
-		defer stressor.New(stressor.Opts{}).Stop()
+		strain := stressor.New(stressor.Opts{})
+		defer strain.Stop()
 
 		time.Sleep(time.Second)
 	}
