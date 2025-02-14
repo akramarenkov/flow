@@ -9,7 +9,7 @@ type Benchmarker struct {
 
 	channels      map[uint]chan uint
 	itemsQuantity map[uint]uint
-	wg            *sync.WaitGroup
+	wg            sync.WaitGroup
 }
 
 // Creates Benchmarker instance.
@@ -31,7 +31,6 @@ func NewBenchmarker(handlersQuantity uint, inputCapacity ...uint) (*Benchmarker,
 
 		channels:      make(map[uint]chan uint),
 		itemsQuantity: make(map[uint]uint),
-		wg:            new(sync.WaitGroup),
 	}
 
 	return bnch, nil

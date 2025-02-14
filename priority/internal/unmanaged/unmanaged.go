@@ -66,7 +66,7 @@ type Discipline[Type any] struct {
 	err      chan error
 	failures chan error
 	output   chan types.Prioritized[Type]
-	wg       *sync.WaitGroup
+	wg       sync.WaitGroup
 }
 
 // Creates and runs discipline.
@@ -82,7 +82,6 @@ func New[Type any](opts Opts[Type]) (*Discipline[Type], error) {
 		err:      make(chan error, 1),
 		failures: make(chan error, len(opts.Inputs)),
 		output:   make(chan types.Prioritized[Type], opts.HandlersQuantity),
-		wg:       new(sync.WaitGroup),
 	}
 
 	go dsc.main()

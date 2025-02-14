@@ -98,7 +98,7 @@ func testDiscipline(
 	discipline, err := New(opts)
 	require.NoError(t, err)
 
-	wg := new(sync.WaitGroup)
+	wg := &sync.WaitGroup{}
 
 	for priority, channel := range inputs {
 		wg.Add(1)

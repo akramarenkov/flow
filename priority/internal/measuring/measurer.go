@@ -46,7 +46,7 @@ type Measurer struct {
 	measuring    chan Measure
 	spans        map[uint]span.Span[uint]
 	starter      *starter.Starter
-	wg           *sync.WaitGroup
+	wg           sync.WaitGroup
 }
 
 // Creates Measurer instance.
@@ -68,8 +68,6 @@ func NewMeasurer(handlersQuantity uint, inputCapacity ...uint) (*Measurer, error
 		actions:   make(map[uint][]action),
 		channels:  make(map[uint]chan uint),
 		durations: make(map[uint]time.Duration),
-
-		wg: new(sync.WaitGroup),
 	}
 
 	return msr, nil
