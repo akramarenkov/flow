@@ -21,8 +21,10 @@ type Opts[Type any] struct {
 	// For equaling use divider.Fair divider, for prioritization use divider.Rate
 	// divider or custom divider
 	Divider types.Divider
+
 	// Quantity of data handlers between which data items are distributed
 	HandlersQuantity uint
+
 	// Input channels of data items. For terminate the discipline it is necessary and
 	// sufficient to close all input channels. Preferably input channels should be
 	// buffered for performance reasons. Optimal capacity is equal to the quantity of
@@ -111,27 +113,27 @@ type Discipline[Type any] struct {
 	output  chan types.Prioritized[Type]
 	release chan uint
 
-	// priority list corresponding to all input channels - main priority list
+	// Priority list corresponding to all input channels - main priority list
 	priorities []uint
-	// priority list whose actual distribution did not reach strategic
+	// Priority list whose actual distribution did not reach strategic
 	unachieved []uint
-	// priority list whose actual distribution did not reach operative
+	// Priority list whose actual distribution did not reach operative
 	unreached []uint
-	// priority list from whose channels it managed to get all data items at
+	// Priority list from whose channels it managed to get all data items at
 	// ​​input/output stage for priorities from the unachieved list and, since the
 	// unachieved list may not be complete with respect to the main priority list
 	// then, at any previous input/output stages - interim main priority list
 	useful []uint
 
-	// actual distribution of data items
+	// Actual distribution of data items
 	actual map[uint]uint
-	// distribution of data items filled by useful priority list and total quantity of
+	// Distribution of data items filled by useful priority list and total quantity of
 	// data handlers - interim strategic distribution
 	operative map[uint]uint
-	// distribution of data items filled by main priority list and total quantity of
+	// Distribution of data items filled by main priority list and total quantity of
 	// data handlers
 	strategic map[uint]uint
-	// distribution on whose quantities ​​input/output is performed
+	// Distribution on whose quantities ​​input/output is performed
 	tactic map[uint]uint
 
 	err chan error
@@ -356,7 +358,7 @@ func (dsc *Discipline[Type]) fillUnachieved() (bool, error) {
 }
 
 func (dsc *Discipline[Type]) vacantHandlers() uint {
-	// integer overflow or incorrect counting are not possible here because
+	// Integer overflow or incorrect counting are not possible here because
 	// the correctness of the distribution is checked at each dividing
 	return dsc.opts.HandlersQuantity - dsc.busyHandlers()
 }
@@ -364,7 +366,7 @@ func (dsc *Discipline[Type]) vacantHandlers() uint {
 func (dsc *Discipline[Type]) busyHandlers() uint {
 	busy := uint(0)
 
-	// integer overflow or incorrect counting are not possible here because
+	// Integer overflow or incorrect counting are not possible here because
 	// the correctness of the distribution is checked at each dividing
 	for _, priority := range dsc.priorities {
 		busy += dsc.actual[priority]
@@ -413,7 +415,7 @@ func (dsc *Discipline[Type]) fillOperative() (bool, error) {
 func (dsc *Discipline[Type]) prepareUseful() {
 	dsc.useful = dsc.useful[:0]
 
-	// is used the main priority list because it is necessary to take into account
+	// Is used the main priority list because it is necessary to take into account
 	// the results of not only the current stage of input/output, but also the previous
 	// ones
 	for _, priority := range dsc.priorities {

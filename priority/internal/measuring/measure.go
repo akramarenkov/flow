@@ -23,10 +23,13 @@ const (
 type Measure struct {
 	// Data item received from the discipline
 	Item uint
+
 	// Position of the measurement in the processing sequence of the data item
 	Kind Kind
+
 	// Priority of data item
 	Priority uint
+
 	// Relative time of measurement execution
 	Time time.Duration
 }

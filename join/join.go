@@ -21,15 +21,18 @@ type Opts[Type any] struct {
 	// buffered for performance reasons. Optimal capacity is in the range of 1 to 3
 	// size of join
 	Input <-chan Type
+
 	// Maximum size of the output slice. Actual size of the output slice may be
 	// smaller due to the timeout or closure of the input channel
 	JoinSize uint
+
 	// By default, to the output channel is written a copy of the accumulated slice.
 	// If the NoCopy is set to true, then to the output channel will be directly
 	// written the accumulated slice. In this case, after the accumulated slice is
 	// no longer used it is necessary to inform the discipline about it by calling
 	// Release method
 	NoCopy bool
+
 	// Timeout value for output slice accumulation. If the output slice has not been
 	// filled completely in the allotted time, then it will be written to the output
 	// channel with the data items accumulated during this time. A zero or negative
@@ -81,6 +84,7 @@ func New[Type any](opts Opts[Type]) (*Discipline[Type], error) {
 		opts: opts,
 
 		join: make([]Type, 0, opts.JoinSize),
+
 		// Value returned by the cap() function is always positive and, in the case of
 		// integer overflow due to adding one, the resulting value can only become
 		// negative, which will cause a panic when executing make() as same as when

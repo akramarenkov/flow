@@ -22,10 +22,13 @@ type Opts[Type any] struct {
 	// For equaling use [divider.Fair] divider, for prioritization use [divider.Rate]
 	// divider or custom divider
 	Divider types.Divider
+
 	// Callback function called in handlers when an data item is received
 	Handle Handle[types.Prioritized[Type], Type]
+
 	// Quantity of data handlers between which data items are distributed
 	HandlersQuantity uint
+
 	// Input channels of data items. For terminate the discipline it is necessary and
 	// sufficient to close all input channels. Preferably input channels should be
 	// buffered for performance reasons. Optimal capacity is equal to the quantity of

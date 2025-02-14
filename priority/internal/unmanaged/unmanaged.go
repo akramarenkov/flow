@@ -24,14 +24,17 @@ type Opts[Type any] struct {
 	// discipline should terminate with an error. An empty map means termination in
 	// normal mode: without an error, after closing and emptying all input channels
 	FailAfter map[uint]uint
+
 	// Quantity of data handlers between which data items are distributed
 	HandlersQuantity uint
+
 	// Input channels of data items. For terminate the discipline it is necessary and
 	// sufficient to close all input channels. Preferably input channels should be
 	// buffered for performance reasons.
 	//
 	// Map key is a value of priority. Zero priority is not allowed
 	Inputs map[uint]<-chan Type
+
 	// Quantity of data items for each priority that will not be written to the output
 	// channel
 	Misses map[uint]uint

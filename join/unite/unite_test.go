@@ -232,17 +232,17 @@ func TestDisciplineTimeoutInputNotMultipleJoinSize(t *testing.T) {
 
 func TestDisciplineMutable(t *testing.T) {
 	data := [][]int{
-		{},                       // nothing has been done
-		{1, 2},                   // add this slice into join
-		{3, 4, 5, 6, 7},          // pass join and then this slice (2)
-		{8, 9, 10},               // add this slice into join
-		{11, 12, 13, 14, 15, 16}, // pass join and then this slice (2)
-		{17, 18, 19},             // add this slice into join
-		{20, 21, 22},             // pass join and add this slice into join (1)
-		{},                       // nothing has been done
-		{23, 24, 25},             // pass join and add this slice into join (1)
-		{26, 27},                 // add this slice into join and pass join (1)
-		{28, 29, 30},             // add this slice into join and pass join at close input (1)
+		{},                       // Nothing has been done
+		{1, 2},                   // Add this slice into join
+		{3, 4, 5, 6, 7},          // Pass join and then this slice (2)
+		{8, 9, 10},               // Add this slice into join
+		{11, 12, 13, 14, 15, 16}, // Pass join and then this slice (2)
+		{17, 18, 19},             // Add this slice into join
+		{20, 21, 22},             // Pass join and add this slice into join (1)
+		{},                       // Nothing has been done
+		{23, 24, 25},             // Pass join and add this slice into join (1)
+		{26, 27},                 // Add this slice into join and pass join (1)
+		{28, 29, 30},             // Add this slice into join and pass join at close input (1)
 	}
 
 	expected := [][]int{

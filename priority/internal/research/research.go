@@ -23,8 +23,10 @@ func QuantityPerInterval(
 
 	// To see the initial zero values ​​on the graph
 	minimum := -interval
+
 	// One interval added to maximum span value to get maximum time into
 	// the last span
+	//
 	// And one more interval added to maximum span value to see the final zero values
 	// ​on ​the graph
 	expansion := 2
@@ -100,8 +102,10 @@ func InProcessing(
 
 	// To see the initial zero values ​​on the graph
 	minimum := -interval
+
 	// One interval added to maximum span value to get maximum time into
 	// the last span
+	//
 	// And one more interval added to maximum span value to see the final zero values
 	// ​on ​the graph
 	expansion := 2

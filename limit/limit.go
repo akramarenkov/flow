@@ -23,6 +23,7 @@ type Opts[Type any] struct {
 	// This, with large values ​​of the Interval field in the rate limit structure, will
 	// result in a long discipline completion time
 	Input <-chan Type
+
 	// Rate limit
 	Limit Rate
 }
