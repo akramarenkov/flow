@@ -91,7 +91,7 @@ func TestDiscipline(t *testing.T) {
 	testDiscipline(t, data, 4, true, 0, 0, 0, expected4, nil)
 }
 
-func TestDisciplineTimeout(t *testing.T) {
+func TestDisciplineTimeoutJoinSize1(t *testing.T) {
 	const (
 		timeout = 100 * time.Millisecond
 		pause   = 10 * timeout
@@ -103,194 +103,220 @@ func TestDisciplineTimeout(t *testing.T) {
 		21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
 	}
 
-	exp1 := [][]int{
+	exp := [][]int{
 		{1}, {2}, {3}, {4}, {5}, {6}, {7}, {8}, {9}, {10},
 		{11}, {12}, {13}, {14}, {15}, {16}, {17}, {18}, {19}, {20},
 		{21}, {22}, {23}, {24}, {25}, {26}, {27}, {28}, {29}, {30},
 	}
 
-	dur1At1 := []time.Duration{
+	durAt1 := []time.Duration{
 		pause, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	}
 
-	dur1At2 := []time.Duration{
+	durAt2 := []time.Duration{
 		0, pause, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	}
 
-	dur1At3 := []time.Duration{
+	durAt3 := []time.Duration{
 		0, 0, pause, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	}
 
-	dur1At4 := []time.Duration{
+	durAt4 := []time.Duration{
 		0, 0, 0, pause, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	}
 
-	dur1At5 := []time.Duration{
+	durAt5 := []time.Duration{
 		0, 0, 0, 0, pause, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	}
 
-	dur1At6 := []time.Duration{
+	durAt6 := []time.Duration{
 		0, 0, 0, 0, 0, pause, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 		0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	}
 
-	testDisciplineParallel(t, "1", data, 1, false, timeout, 1, pause, exp1, dur1At1)
-	testDisciplineParallel(t, "1", data, 1, true, timeout, 1, pause, exp1, dur1At1)
-	testDisciplineParallel(t, "1", data, 1, false, timeout, 2, pause, exp1, dur1At2)
-	testDisciplineParallel(t, "1", data, 1, true, timeout, 2, pause, exp1, dur1At2)
-	testDisciplineParallel(t, "1", data, 1, false, timeout, 3, pause, exp1, dur1At3)
-	testDisciplineParallel(t, "1", data, 1, true, timeout, 3, pause, exp1, dur1At3)
-	testDisciplineParallel(t, "1", data, 1, false, timeout, 4, pause, exp1, dur1At4)
-	testDisciplineParallel(t, "1", data, 1, true, timeout, 4, pause, exp1, dur1At4)
-	testDisciplineParallel(t, "1", data, 1, false, timeout, 5, pause, exp1, dur1At5)
-	testDisciplineParallel(t, "1", data, 1, true, timeout, 5, pause, exp1, dur1At5)
-	testDisciplineParallel(t, "1", data, 1, false, timeout, 6, pause, exp1, dur1At6)
-	testDisciplineParallel(t, "1", data, 1, true, timeout, 6, pause, exp1, dur1At6)
+	testDisciplineParallel(t, data, 1, false, timeout, 1, pause, exp, durAt1)
+	testDisciplineParallel(t, data, 1, true, timeout, 1, pause, exp, durAt1)
+	testDisciplineParallel(t, data, 1, false, timeout, 2, pause, exp, durAt2)
+	testDisciplineParallel(t, data, 1, true, timeout, 2, pause, exp, durAt2)
+	testDisciplineParallel(t, data, 1, false, timeout, 3, pause, exp, durAt3)
+	testDisciplineParallel(t, data, 1, true, timeout, 3, pause, exp, durAt3)
+	testDisciplineParallel(t, data, 1, false, timeout, 4, pause, exp, durAt4)
+	testDisciplineParallel(t, data, 1, true, timeout, 4, pause, exp, durAt4)
+	testDisciplineParallel(t, data, 1, false, timeout, 5, pause, exp, durAt5)
+	testDisciplineParallel(t, data, 1, true, timeout, 5, pause, exp, durAt5)
+	testDisciplineParallel(t, data, 1, false, timeout, 6, pause, exp, durAt6)
+	testDisciplineParallel(t, data, 1, true, timeout, 6, pause, exp, durAt6)
+}
 
-	exp3At1 := [][]int{
+func TestDisciplineTimeoutJoinSize3(t *testing.T) {
+	const (
+		timeout = 200 * time.Millisecond
+		pause   = 10 * timeout
+	)
+
+	data := []int{
+		1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+		11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+		21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+	}
+
+	expAt1 := [][]int{
 		{1, 2, 3}, {4, 5, 6}, {7, 8, 9}, {10, 11, 12}, {13, 14, 15},
 		{16, 17, 18}, {19, 20, 21}, {22, 23, 24}, {25, 26, 27}, {28, 29, 30},
 	}
 
-	dur3At1 := []time.Duration{
+	durAt1 := []time.Duration{
 		pause, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	}
 
-	exp3At2 := [][]int{
+	expAt2 := [][]int{
 		{1}, {2, 3, 4}, {5, 6, 7}, {8, 9, 10}, {11, 12, 13}, {14, 15, 16},
 		{17, 18, 19}, {20, 21, 22}, {23, 24, 25}, {26, 27, 28}, {29, 30},
 	}
 
-	dur3At2 := []time.Duration{
+	durAt2 := []time.Duration{
 		timeout, pause - timeout, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	}
 
-	exp3At3 := [][]int{
+	expAt3 := [][]int{
 		{1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}, {12, 13, 14}, {15, 16, 17},
 		{18, 19, 20}, {21, 22, 23}, {24, 25, 26}, {27, 28, 29}, {30},
 	}
 
-	dur3At3 := []time.Duration{
+	durAt3 := []time.Duration{
 		timeout, pause - timeout, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 	}
 
-	exp3At4 := [][]int{
+	expAt4 := [][]int{
 		{1, 2, 3}, {4, 5, 6}, {7, 8, 9}, {10, 11, 12}, {13, 14, 15},
 		{16, 17, 18}, {19, 20, 21}, {22, 23, 24}, {25, 26, 27}, {28, 29, 30},
 	}
 
-	dur3At4 := []time.Duration{
+	durAt4 := []time.Duration{
 		0, pause, 0, 0, 0, 0, 0, 0, 0, 0,
 	}
 
-	exp3At5 := [][]int{
+	expAt5 := [][]int{
 		{1, 2, 3}, {4}, {5, 6, 7}, {8, 9, 10}, {11, 12, 13}, {14, 15, 16},
 		{17, 18, 19}, {20, 21, 22}, {23, 24, 25}, {26, 27, 28}, {29, 30},
 	}
 
-	dur3At5 := []time.Duration{
+	durAt5 := []time.Duration{
 		0, timeout, pause - timeout, 0, 0, 0, 0, 0, 0, 0, 0,
 	}
 
-	exp3At6 := [][]int{
+	expAt6 := [][]int{
 		{1, 2, 3}, {4, 5}, {6, 7, 8}, {9, 10, 11}, {12, 13, 14}, {15, 16, 17},
 		{18, 19, 20}, {21, 22, 23}, {24, 25, 26}, {27, 28, 29}, {30},
 	}
 
-	dur3At6 := []time.Duration{
+	durAt6 := []time.Duration{
 		0, timeout, pause - timeout, 0, 0, 0, 0, 0, 0, 0, 0,
 	}
 
-	testDisciplineParallel(t, "3", data, 3, false, timeout, 1, pause, exp3At1, dur3At1)
-	testDisciplineParallel(t, "3", data, 3, true, timeout, 1, pause, exp3At1, dur3At1)
-	testDisciplineParallel(t, "3", data, 3, false, timeout, 2, pause, exp3At2, dur3At2)
-	testDisciplineParallel(t, "3", data, 3, true, timeout, 2, pause, exp3At2, dur3At2)
-	testDisciplineParallel(t, "3", data, 3, false, timeout, 3, pause, exp3At3, dur3At3)
-	testDisciplineParallel(t, "3", data, 3, true, timeout, 3, pause, exp3At3, dur3At3)
-	testDisciplineParallel(t, "3", data, 3, false, timeout, 4, pause, exp3At4, dur3At4)
-	testDisciplineParallel(t, "3", data, 3, true, timeout, 4, pause, exp3At4, dur3At4)
-	testDisciplineParallel(t, "3", data, 3, false, timeout, 5, pause, exp3At5, dur3At5)
-	testDisciplineParallel(t, "3", data, 3, true, timeout, 5, pause, exp3At5, dur3At5)
-	testDisciplineParallel(t, "3", data, 3, false, timeout, 6, pause, exp3At6, dur3At6)
-	testDisciplineParallel(t, "3", data, 3, true, timeout, 6, pause, exp3At6, dur3At6)
+	testDisciplineParallel(t, data, 3, false, timeout, 1, pause, expAt1, durAt1)
+	testDisciplineParallel(t, data, 3, true, timeout, 1, pause, expAt1, durAt1)
+	testDisciplineParallel(t, data, 3, false, timeout, 2, pause, expAt2, durAt2)
+	testDisciplineParallel(t, data, 3, true, timeout, 2, pause, expAt2, durAt2)
+	testDisciplineParallel(t, data, 3, false, timeout, 3, pause, expAt3, durAt3)
+	testDisciplineParallel(t, data, 3, true, timeout, 3, pause, expAt3, durAt3)
+	testDisciplineParallel(t, data, 3, false, timeout, 4, pause, expAt4, durAt4)
+	testDisciplineParallel(t, data, 3, true, timeout, 4, pause, expAt4, durAt4)
+	testDisciplineParallel(t, data, 3, false, timeout, 5, pause, expAt5, durAt5)
+	testDisciplineParallel(t, data, 3, true, timeout, 5, pause, expAt5, durAt5)
+	testDisciplineParallel(t, data, 3, false, timeout, 6, pause, expAt6, durAt6)
+	testDisciplineParallel(t, data, 3, true, timeout, 6, pause, expAt6, durAt6)
+}
 
-	exp4At1 := [][]int{
+func TestDisciplineTimeoutJoinSize4(t *testing.T) {
+	const (
+		timeout = 300 * time.Millisecond
+		pause   = 10 * timeout
+	)
+
+	data := []int{
+		1, 2, 3, 4, 5, 6, 7, 8, 9, 10,
+		11, 12, 13, 14, 15, 16, 17, 18, 19, 20,
+		21, 22, 23, 24, 25, 26, 27, 28, 29, 30,
+	}
+
+	expAt1 := [][]int{
 		{1, 2, 3, 4}, {5, 6, 7, 8}, {9, 10, 11, 12}, {13, 14, 15, 16},
 		{17, 18, 19, 20}, {21, 22, 23, 24}, {25, 26, 27, 28}, {29, 30},
 	}
 
-	dur4At1 := []time.Duration{
+	durAt1 := []time.Duration{
 		pause, 0, 0, 0, 0, 0, 0, 0,
 	}
 
-	exp4At2 := [][]int{
+	expAt2 := [][]int{
 		{1}, {2, 3, 4, 5}, {6, 7, 8, 9}, {10, 11, 12, 13}, {14, 15, 16, 17},
 		{18, 19, 20, 21}, {22, 23, 24, 25}, {26, 27, 28, 29}, {30},
 	}
 
-	dur4At2 := []time.Duration{
+	durAt2 := []time.Duration{
 		timeout, pause - timeout, 0, 0, 0, 0, 0, 0, 0,
 	}
 
-	exp4At3 := [][]int{
+	expAt3 := [][]int{
 		{1, 2}, {3, 4, 5, 6}, {7, 8, 9, 10}, {11, 12, 13, 14}, {15, 16, 17, 18},
 		{19, 20, 21, 22}, {23, 24, 25, 26}, {27, 28, 29, 30},
 	}
 
-	dur4At3 := []time.Duration{
+	durAt3 := []time.Duration{
 		timeout, pause - timeout, 0, 0, 0, 0, 0, 0,
 	}
 
-	exp4At4 := [][]int{
+	expAt4 := [][]int{
 		{1, 2, 3}, {4, 5, 6, 7}, {8, 9, 10, 11}, {12, 13, 14, 15}, {16, 17, 18, 19},
 		{20, 21, 22, 23}, {24, 25, 26, 27}, {28, 29, 30},
 	}
 
-	dur4At4 := []time.Duration{
+	durAt4 := []time.Duration{
 		timeout, pause - timeout, 0, 0, 0, 0, 0, 0,
 	}
 
-	exp4At5 := [][]int{
+	expAt5 := [][]int{
 		{1, 2, 3, 4}, {5, 6, 7, 8}, {9, 10, 11, 12}, {13, 14, 15, 16},
 		{17, 18, 19, 20}, {21, 22, 23, 24}, {25, 26, 27, 28}, {29, 30},
 	}
 
-	dur4At5 := []time.Duration{
+	durAt5 := []time.Duration{
 		0, pause, 0, 0, 0, 0, 0, 0,
 	}
 
-	exp4At6 := [][]int{
+	expAt6 := [][]int{
 		{1, 2, 3, 4}, {5}, {6, 7, 8, 9}, {10, 11, 12, 13}, {14, 15, 16, 17},
 		{18, 19, 20, 21}, {22, 23, 24, 25}, {26, 27, 28, 29}, {30},
 	}
 
-	dur4At6 := []time.Duration{
+	durAt6 := []time.Duration{
 		0, timeout, pause - timeout, 0, 0, 0, 0, 0, 0,
 	}
 
-	testDisciplineParallel(t, "4", data, 4, false, timeout, 1, pause, exp4At1, dur4At1)
-	testDisciplineParallel(t, "4", data, 4, true, timeout, 1, pause, exp4At1, dur4At1)
-	testDisciplineParallel(t, "4", data, 4, false, timeout, 2, pause, exp4At2, dur4At2)
-	testDisciplineParallel(t, "4", data, 4, true, timeout, 2, pause, exp4At2, dur4At2)
-	testDisciplineParallel(t, "4", data, 4, false, timeout, 3, pause, exp4At3, dur4At3)
-	testDisciplineParallel(t, "4", data, 4, true, timeout, 3, pause, exp4At3, dur4At3)
-	testDisciplineParallel(t, "4", data, 4, false, timeout, 4, pause, exp4At4, dur4At4)
-	testDisciplineParallel(t, "4", data, 4, true, timeout, 4, pause, exp4At4, dur4At4)
-	testDisciplineParallel(t, "4", data, 4, false, timeout, 5, pause, exp4At5, dur4At5)
-	testDisciplineParallel(t, "4", data, 4, true, timeout, 5, pause, exp4At5, dur4At5)
-	testDisciplineParallel(t, "4", data, 4, false, timeout, 6, pause, exp4At6, dur4At6)
-	testDisciplineParallel(t, "4", data, 4, true, timeout, 6, pause, exp4At6, dur4At6)
+	testDisciplineParallel(t, data, 4, false, timeout, 1, pause, expAt1, durAt1)
+	testDisciplineParallel(t, data, 4, true, timeout, 1, pause, expAt1, durAt1)
+	testDisciplineParallel(t, data, 4, false, timeout, 2, pause, expAt2, durAt2)
+	testDisciplineParallel(t, data, 4, true, timeout, 2, pause, expAt2, durAt2)
+	testDisciplineParallel(t, data, 4, false, timeout, 3, pause, expAt3, durAt3)
+	testDisciplineParallel(t, data, 4, true, timeout, 3, pause, expAt3, durAt3)
+	testDisciplineParallel(t, data, 4, false, timeout, 4, pause, expAt4, durAt4)
+	testDisciplineParallel(t, data, 4, true, timeout, 4, pause, expAt4, durAt4)
+	testDisciplineParallel(t, data, 4, false, timeout, 5, pause, expAt5, durAt5)
+	testDisciplineParallel(t, data, 4, true, timeout, 5, pause, expAt5, durAt5)
+	testDisciplineParallel(t, data, 4, false, timeout, 6, pause, expAt6, durAt6)
+	testDisciplineParallel(t, data, 4, true, timeout, 6, pause, expAt6, durAt6)
 }
 
 func testDiscipline(
@@ -365,7 +391,6 @@ func testDiscipline(
 
 func testDisciplineParallel(
 	t *testing.T,
-	name string,
 	data []int,
 	joinSize uint,
 	noCopy bool,
@@ -376,7 +401,7 @@ func testDisciplineParallel(
 	expectedDurations []time.Duration,
 ) {
 	t.Run(
-		name,
+		"",
 		func(t *testing.T) {
 			t.Parallel()
 
