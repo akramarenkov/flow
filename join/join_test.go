@@ -396,76 +396,77 @@ func testDisciplineParallel(
 }
 
 func BenchmarkDiscipline(b *testing.B) {
-	benchmarkDiscipline(b, 10, false, defaults.TestTimeout, 1)
+	benchmarkDiscipline(b, false, defaults.TestTimeout, 1)
 }
 
 func BenchmarkDisciplineNoCopy(b *testing.B) {
-	benchmarkDiscipline(b, 10, true, defaults.TestTimeout, 1)
+	benchmarkDiscipline(b, true, defaults.TestTimeout, 1)
 }
 
 func BenchmarkDisciplineUntimeouted(b *testing.B) {
-	benchmarkDiscipline(b, 10, false, 0, 1)
+	benchmarkDiscipline(b, false, 0, 1)
 }
 
 func BenchmarkDisciplineNoCopyUntimeouted(b *testing.B) {
-	benchmarkDiscipline(b, 10, true, 0, 1)
+	benchmarkDiscipline(b, true, 0, 1)
 }
 
 func BenchmarkDisciplineInputCapacity0(b *testing.B) {
-	benchmarkDiscipline(b, 10, false, 0, 0)
+	benchmarkDiscipline(b, false, 0, 0)
 }
 
 func BenchmarkDisciplineNoCopyInputCapacity0(b *testing.B) {
-	benchmarkDiscipline(b, 10, true, 0, 0)
+	benchmarkDiscipline(b, true, 0, 0)
 }
 
 func BenchmarkDisciplineInputCapacity50(b *testing.B) {
-	benchmarkDiscipline(b, 10, false, 0, 0.5)
+	benchmarkDiscipline(b, false, 0, 0.5)
 }
 
 func BenchmarkDisciplineNoCopyInputCapacity50(b *testing.B) {
-	benchmarkDiscipline(b, 10, true, 0, 0.5)
+	benchmarkDiscipline(b, true, 0, 0.5)
 }
 
 func BenchmarkDisciplineInputCapacity100(b *testing.B) {
-	benchmarkDiscipline(b, 10, false, 0, 1)
+	benchmarkDiscipline(b, false, 0, 1)
 }
 
 func BenchmarkDisciplineNoCopyInputCapacity100(b *testing.B) {
-	benchmarkDiscipline(b, 10, true, 0, 1)
+	benchmarkDiscipline(b, true, 0, 1)
 }
 
 func BenchmarkDisciplineInputCapacity200(b *testing.B) {
-	benchmarkDiscipline(b, 10, false, 0, 2)
+	benchmarkDiscipline(b, false, 0, 2)
 }
 
 func BenchmarkDisciplineNoCopyInputCapacity200(b *testing.B) {
-	benchmarkDiscipline(b, 10, true, 0, 2)
+	benchmarkDiscipline(b, true, 0, 2)
 }
 
 func BenchmarkDisciplineInputCapacity300(b *testing.B) {
-	benchmarkDiscipline(b, 10, false, 0, 3)
+	benchmarkDiscipline(b, false, 0, 3)
 }
 
 func BenchmarkDisciplineNoCopyInputCapacity300(b *testing.B) {
-	benchmarkDiscipline(b, 10, true, 0, 3)
+	benchmarkDiscipline(b, true, 0, 3)
 }
 
 func BenchmarkDisciplineInputCapacity400(b *testing.B) {
-	benchmarkDiscipline(b, 10, false, 0, 4)
+	benchmarkDiscipline(b, false, 0, 4)
 }
 
 func BenchmarkDisciplineNoCopyInputCapacity400(b *testing.B) {
-	benchmarkDiscipline(b, 10, true, 0, 4)
+	benchmarkDiscipline(b, true, 0, 4)
 }
 
 func benchmarkDiscipline(
 	b *testing.B,
-	joinSize uint,
 	noCopy bool,
 	timeout time.Duration,
 	capacityFactor float64,
 ) {
+	const joinSize = 10
+
 	joinsQuantity := b.N
 
 	sizeOfJoin, err := safe.IToI[int](joinSize)
