@@ -81,8 +81,6 @@ func testGraphFairEven(t *testing.T, factor uint, unbufferedInput bool) {
 		opts.HandlersQuantity,
 		unbufferedInput,
 		measurements,
-		100*time.Millisecond,
-		1*time.Second,
 	)
 }
 
@@ -147,8 +145,6 @@ func testGraphFairUneven(t *testing.T, factor uint, unbufferedInput bool) {
 		opts.HandlersQuantity,
 		unbufferedInput,
 		measurements,
-		100*time.Millisecond,
-		1*time.Second,
 	)
 }
 
@@ -213,8 +209,6 @@ func testGraphRateEven(t *testing.T, factor uint, unbufferedInput bool) {
 		opts.HandlersQuantity,
 		unbufferedInput,
 		measurements,
-		100*time.Millisecond,
-		1*time.Second,
 	)
 }
 
@@ -279,8 +273,6 @@ func testGraphRateUneven(t *testing.T, factor uint, unbufferedInput bool) {
 		opts.HandlersQuantity,
 		unbufferedInput,
 		measurements,
-		100*time.Millisecond,
-		1*time.Second,
 	)
 }
 
@@ -345,8 +337,6 @@ func testGraphRate721Even(t *testing.T, factor uint, unbufferedInput bool) {
 		opts.HandlersQuantity,
 		unbufferedInput,
 		measurements,
-		100*time.Millisecond,
-		1*time.Second,
 	)
 }
 
@@ -411,8 +401,6 @@ func testGraphRate721Uneven(t *testing.T, factor uint, unbufferedInput bool) {
 		opts.HandlersQuantity,
 		unbufferedInput,
 		measurements,
-		100*time.Millisecond,
-		1*time.Second,
 	)
 }
 
@@ -476,8 +464,6 @@ func testGraphUnmanagedEven(t *testing.T, factor uint, unbufferedInput bool) {
 		opts.HandlersQuantity,
 		unbufferedInput,
 		measurements,
-		100*time.Millisecond,
-		1*time.Second,
 	)
 }
 
@@ -541,8 +527,6 @@ func testGraphUnmanagedUneven(t *testing.T, factor uint, unbufferedInput bool) {
 		opts.HandlersQuantity,
 		unbufferedInput,
 		measurements,
-		100*time.Millisecond,
-		1*time.Second,
 	)
 }
 
@@ -611,8 +595,6 @@ func testGraphDividingError(t *testing.T, handlersQuantity uint) {
 		opts.HandlersQuantity,
 		false,
 		measurements,
-		100*time.Millisecond,
-		1*time.Second,
 	)
 }
 
@@ -623,9 +605,12 @@ func createGraphs(
 	handlersQuantity uint,
 	unbufferedInput bool,
 	measurements []measuring.Measure,
-	graphInterval time.Duration,
-	graphTimeUnit time.Duration,
 ) {
+	const (
+		graphInterval = 100 * time.Millisecond
+		graphTimeUnit = time.Second
+	)
+
 	received := slices.DeleteFunc(slices.Clone(measurements), measuring.KeepReceived)
 
 	dqot, dqotX := research.QotToLineChart(
