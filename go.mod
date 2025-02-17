@@ -10,7 +10,7 @@ require (
 	github.com/akramarenkov/span v0.7.3
 	github.com/akramarenkov/starter v0.2.1
 	github.com/akramarenkov/stressor v0.1.1
-	github.com/go-echarts/go-echarts/v2 v2.5.0
+	github.com/go-echarts/go-echarts/v2 v2.5.1
 	github.com/guptarohit/asciigraph v0.7.3
 	github.com/stretchr/testify v1.10.0
 	github.com/wcharczuk/go-chart/v2 v2.1.2
