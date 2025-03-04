@@ -90,8 +90,8 @@ func ExampleDiscipline() {
 
 				measurements <- measurement
 
-				// Handlers must call this method after the current data item has been
-				// processed
+				// Handlers must call this method after the current
+				// data item has been processed
 				discipline.Release(prioritized.Priority)
 			}
 		}()

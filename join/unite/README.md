@@ -2,15 +2,22 @@
 
 ## Purpose
 
-Accumulates items of slices from an input channel into a one slice and write that slice to an output channel when the maximum slice size or timeout for its accumulation is reached
+Accumulates items of slices from an input channel into a one slice and write
+ that slice to an output channel when the maximum slice size or timeout for
+ its accumulation is reached
 
-It works like a join discipline but accepts slices as input and unite their items into one slice. Along with this, the input slices are not divided between the output slices
+It works like a join discipline but accepts slices as input and unite their
+ items into one slice. Along with this, the input slices are not divided
+ between the output slices
 
 Works in two modes:
 
-1. Making a copy of the accumulated slice before writing it to the output channel
+1. Making a copy of the accumulated slice before writing it to the output
+ channel
 
-2. Writing to the output channel the accumulated slice without copying, in this case it is necessary to inform the discipline that the slice is no longer used by call the Release method
+2. Writing to the output channel the accumulated slice without copying, in
+ this case it is necessary to inform the discipline that the slice is no
+ longer used by call the Release method
 
 ## Usage
 

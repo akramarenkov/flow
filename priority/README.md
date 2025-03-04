@@ -2,9 +2,11 @@
 
 ## Purpose
 
-Distributes data items between handlers in quantity corresponding to the priority of the data items
+Distributes data items between handlers in quantity corresponding to the
+ priority of the data items
 
-Also may be used to equaling distribution of data items with different processing times
+Also may be used to equaling distribution of data items with different
+ processing times
 
 ## Principle of operation
 
@@ -18,9 +20,14 @@ Also may be used to equaling distribution of data items with different processin
 
 ## Comparison with unmanaged distribution
 
-If different times are spent processing data of different priorities, then we will get different processing speeds in the case of using the priority discipline and without it.
+If different times are spent processing data of different priorities, then we
+ will get different processing speeds in the case of using the priority
+ discipline and without it.
 
-For example, suppose that data of priority 3 is processed in time **T**, data of priority 2 is processed in time 5\***T**, and data of priority 1 is processed in time 10\***T**, then we will get the following results (quantity of processed data and the quantity of handlers are the same in both cases):
+For example, suppose that data of priority 3 is processed in time **T**,
+ data of priority 2 is processed in time 5\***T**, and data of priority 1 is
+ processed in time 10\***T**, then we will get the following results (quantity
+ of processed data and the quantity of handlers are the same in both cases):
 
 * equaling by priority discipline:
 
@@ -30,7 +37,13 @@ For example, suppose that data of priority 3 is processed in time **T**, data of
 
   ![Unmanaged distribution](doc/different-processing-time-unmanaged.svg)
 
-It can be seen that with unmanaged distribution, the processing speed of data of priority 3 is limited by the slowest processed data (of priority 1 and 2), but at with equaling by the priority discipline the processing speed of data of priority 3 is no limited by others priorities. Similarly, with unmanaged distribution, the processing speed of data of priority 2 is limited by slower processed data of priority 1, but there is no such limitation with equaling by the priority discipline
+It can be seen that with unmanaged distribution, the processing speed of data
+ of priority 3 is limited by the slowest processed data (of priority 1 and 2),
+ but at with equaling by the priority discipline the processing speed of data
+ of priority 3 is no limited by others priorities. Similarly, with unmanaged
+ distribution, the processing speed of data of priority 2 is limited by slower
+ processed data of priority 1, but there is no such limitation with equaling
+ by the priority discipline
 
 ## Usage
 
@@ -129,8 +142,8 @@ func main() {
 
                 measurements <- measurement
 
-                // Handlers must call this method after the current data item has been
-                // processed
+                // Handlers must call this method after the current
+                // data item has been processed
                 discipline.Release(prioritized.Priority)
             }
         }()

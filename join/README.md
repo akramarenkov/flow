@@ -2,13 +2,18 @@
 
 ## Purpose
 
-Accumulates data items from an input channel into a slice and write that slice to an output channel when the maximum slice size or timeout for its accumulation is reached
+Accumulates data items from an input channel into a slice and write that
+ slice to an output channel when the maximum slice size or timeout for
+ its accumulation is reached
 
 Works in two modes:
 
-1. Making a copy of the accumulated slice before writing it to the output channel
+1. Making a copy of the accumulated slice before writing it to the output
+ channel
 
-2. Writing to the output channel the accumulated slice without copying, in this case it is necessary to inform the discipline that the slice is no longer used by call the Release method
+2. Writing to the output channel the accumulated slice without copying, in
+ this case it is necessary to inform the discipline that the slice is no
+ longer used by call the Release method
 
 ## Usage
 

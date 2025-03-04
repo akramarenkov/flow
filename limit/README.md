@@ -2,27 +2,43 @@
 
 ## Purpose
 
-Limits the speed of passing data items from the input channel to the output channel
+Limits the speed of passing data items from the input channel to the output
+ channel
 
-The speed limit is set by the **Rate** structure, in which the **Quantity** field specifies the number of data items that must pass over the time interval specified in the **Interval** field
+The speed limit is set by the **Rate** structure, in which the **Quantity**
+ field specifies the number of data items that must pass over the time
+ interval specified in the **Interval** field
 
 ## Peculiarities
 
-As we know, the speed of 1000 data items per second is, in fact, the same speed as 1 data item per millisecond specified in different units of measurement
+As we know, the speed of 1000 data items per second is, in fact, the same
+ speed as 1 data item per millisecond specified in different units of
+ measurement
 
-However, the units of measurement affect the distribution of data items written to the output channel over time and the performance of the discipline
+However, the units of measurement affect the distribution of data items
+ written to the output channel over time and the performance of the discipline
 
-If the speed is specified as 1000 data items per second, first 1000 data items will be written to the output channel, and then a pause will be made equal to 1 second minus the time spent writing 1000 data items
+If the speed is specified as 1000 data items per second, first 1000 data items
+ will be written to the output channel, and then a pause will be made equal
+ to 1 second minus the time spent writing 1000 data items
 
-If the speed is specified in the form of 1 data item per millisecond, first 1 data item will be written to the output channel, and then a pause will be made equal to 1 millisecond minus the time spent on writing 1 data item
+If the speed is specified in the form of 1 data item per millisecond, first 1
+ data item will be written to the output channel, and then a pause will be
+ made equal to 1 millisecond minus the time spent on writing 1 data item
 
-However, the performance of the discipline if the speed is specified in the form of 1 data item per millisecond will be lower but the uniformity of the distribution of data items over time will be higher
+However, the performance of the discipline if the speed is specified in the
+ form of 1 data item per millisecond will be lower but the uniformity of the
+ distribution of data items over time will be higher
 
-Thus, when choosing units of measurement, you can balance between the uniform distribution of data items over time and performance (the maximum achievable speed)
+Thus, when choosing units of measurement, you can balance between the uniform
+ distribution of data items over time and performance (the maximum achievable
+ speed)
 
-Based on measurements, specifying a time interval of less than 10 milliseconds significantly reduces performance and accuracy
+Based on measurements, specifying a time interval of less than 10 milliseconds
+ significantly reduces performance and accuracy
 
-Under heavy system load, it is not advisable to specify an time interval less than 1 second
+Under heavy system load, it is not advisable to specify an time interval less
+ than 1 second
 
 ## Usage
 

@@ -10,8 +10,12 @@ Library that provides data flow control between Go channels
 
 ## Implemented disciplines
 
-* **join** - accumulates data items from an input channel into a slice and write that slice to an output channel when the maximum slice size or timeout for its accumulation is reached. See [README](join/README.md)
+* **join** - accumulates data items from an input channel into a slice and
+ write that slice to an output channel when the maximum slice size or timeout
+ for its accumulation is reached. See [README](join/README.md)
 
-* **limit** - limits the speed of passing data items from the input channel to the output channel. See [README](limit/README.md)
+* **limit** - limits the speed of passing data items from the input channel
+ to the output channel. See [README](limit/README.md)
 
-* **priority** - distributes data items between handlers in quantity corresponding to the priority of the data items. See [README](priority/README.md)
+* **priority** - distributes data items between handlers in quantity
+ corresponding to the priority of the data items. See [README](priority/README.md)
