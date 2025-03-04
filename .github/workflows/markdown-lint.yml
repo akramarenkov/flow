@@ -12,4 +12,4 @@ jobs:
   lint:
     runs-on: ubuntu-latest
     steps:
-      - uses: DavidAnson/markdownlint-cli2-action@v9
+      - uses: DavidAnson/markdownlint-cli2-action@v19
