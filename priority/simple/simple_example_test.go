@@ -136,19 +136,19 @@ func ExampleDiscipline() {
 	}
 
 	// Preparing research data for plot
-	serieses := make([][]float64, 0, len(quantities))
+	series := make([][]float64, 0, len(quantities))
 	legends := make([]string, 0, len(quantities))
 
 	// To keep the legends in the same order
 	priorities := slices.SortedFunc(maps.Keys(quantities), priority.Compare)
 
 	for _, prio := range priorities {
-		serieses = append(serieses, quantities[prio])
+		series = append(series, quantities[prio])
 		legends = append(legends, strconv.FormatUint(uint64(prio), 10))
 	}
 
 	graph := asciigraph.PlotMany(
-		serieses,
+		series,
 		asciigraph.Height(10),
 		asciigraph.Caption("Quantity of data items received by handlers over time"),
 		asciigraph.SeriesColors(asciigraph.Red, asciigraph.Green, asciigraph.Blue),

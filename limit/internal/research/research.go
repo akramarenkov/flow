@@ -98,7 +98,7 @@ func QuantityPerInterval(
 }
 
 func QotToBarChart(quantities []qot.QoT) ([]chartsopts.BarData, []int) {
-	serieses := make([]chartsopts.BarData, 0, len(quantities))
+	series := make([]chartsopts.BarData, 0, len(quantities))
 	xaxis := make([]int, 0, len(quantities))
 
 	for id, quantity := range quantities {
@@ -110,11 +110,11 @@ func QotToBarChart(quantities []qot.QoT) ([]chartsopts.BarData, []int) {
 			Value: quantity.Quantity,
 		}
 
-		serieses = append(serieses, item)
+		series = append(series, item)
 		xaxis = append(xaxis, id)
 	}
 
-	return serieses, xaxis
+	return series, xaxis
 }
 
 func Deviations(times []time.Duration, expected time.Duration) map[int]int {
@@ -170,7 +170,7 @@ func Deviations(times []time.Duration, expected time.Duration) map[int]int {
 }
 
 func DeviationsToBarChart(deviations map[int]int) ([]chartsopts.BarData, []int) {
-	serieses := make([]chartsopts.BarData, 0, len(deviations))
+	series := make([]chartsopts.BarData, 0, len(deviations))
 	xaxis := make([]int, 0, len(deviations))
 
 	for percent := range deviations {
@@ -188,10 +188,10 @@ func DeviationsToBarChart(deviations map[int]int) ([]chartsopts.BarData, []int) 
 			Value: deviations[percent],
 		}
 
-		serieses = append(serieses, item)
+		series = append(series, item)
 	}
 
-	return serieses, xaxis
+	return series, xaxis
 }
 
 func TotalDuration(durations []time.Duration) time.Duration {

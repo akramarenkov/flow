@@ -107,8 +107,8 @@ func testGraphSleep(t *testing.T, quantity int, duration time.Duration, stress b
 
 func createDelayerQuantitiesGraph(
 	t *testing.T,
-	titlePerfix string,
-	fileNamePerfix string,
+	titlePrefix string,
+	fileNamePrefix string,
 	times []time.Duration,
 	delay time.Duration,
 	stress bool,
@@ -125,11 +125,11 @@ func createDelayerQuantitiesGraph(
 		fmtTotalDuration(expectedDuration, times),
 	)
 
-	fileNameAdd := fmt.Sprintf("%s_quantities_duration_%s", fileNamePerfix, delay)
+	fileNameAdd := fmt.Sprintf("%s_quantities_duration_%s", fileNamePrefix, delay)
 
 	createGraph(
 		t,
-		titlePerfix+" quantities over time",
+		titlePrefix+" quantities over time",
 		subtitleAdd,
 		fileNameAdd,
 		"quantities",
@@ -143,8 +143,8 @@ func createDelayerQuantitiesGraph(
 
 func createDelayerDeviationsGraph(
 	t *testing.T,
-	titlePerfix string,
-	fileNamePerfix string,
+	titlePrefix string,
+	fileNamePrefix string,
 	times []time.Duration,
 	duration time.Duration,
 	stress bool,
@@ -154,11 +154,11 @@ func createDelayerDeviationsGraph(
 	axisY, axisX := research.DeviationsToBarChart(deviations)
 
 	subtitleAdd := fmt.Sprintf("duration: %s", duration)
-	fileNameAdd := fmt.Sprintf("%s_deviations_duration_%s", fileNamePerfix, duration)
+	fileNameAdd := fmt.Sprintf("%s_deviations_duration_%s", fileNamePrefix, duration)
 
 	createGraph(
 		t,
-		titlePerfix+" deviations",
+		titlePrefix+" deviations",
 		subtitleAdd,
 		fileNameAdd,
 		"deviations",

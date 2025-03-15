@@ -175,12 +175,12 @@ func QotToLineChart(
 	quantities map[uint][]qot.QoT,
 	timeUnit time.Duration,
 ) (map[uint][]chartsopts.LineData, []int) {
-	serieses := make(map[uint][]chartsopts.LineData)
+	series := make(map[uint][]chartsopts.LineData)
 	xaxis := []int(nil)
 
 	for priority := range quantities {
-		if _, exists := serieses[priority]; !exists {
-			serieses[priority] = make([]chartsopts.LineData, 0, len(quantities[priority]))
+		if _, exists := series[priority]; !exists {
+			series[priority] = make([]chartsopts.LineData, 0, len(quantities[priority]))
 
 			if xaxis == nil {
 				xaxis = make([]int, 0, len(quantities[priority]))
@@ -193,7 +193,7 @@ func QotToLineChart(
 				Value: quantity.Quantity,
 			}
 
-			serieses[priority] = append(serieses[priority], item)
+			series[priority] = append(series[priority], item)
 
 			if len(xaxis) < len(quantities[priority]) {
 				xaxis = append(xaxis, int(quantity.Time/timeUnit))
@@ -201,5 +201,5 @@ func QotToLineChart(
 		}
 	}
 
-	return serieses, xaxis
+	return series, xaxis
 }

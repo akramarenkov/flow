@@ -662,10 +662,10 @@ func createLineGraph(
 	title string,
 	subtitle string,
 	fileName string,
-	serieses map[uint][]chartsopts.LineData,
+	series map[uint][]chartsopts.LineData,
 	abscissa []int,
 ) {
-	if len(serieses) == 0 {
+	if len(series) == 0 {
 		return
 	}
 
@@ -680,7 +680,7 @@ func createLineGraph(
 		),
 	)
 
-	addLineSeries(chart.SetXAxis(abscissa), serieses)
+	addLineSeries(chart.SetXAxis(abscissa), series)
 
 	file, err := os.Create(fileName)
 	require.NoError(t, err)
@@ -691,10 +691,10 @@ func createLineGraph(
 	require.NoError(t, err)
 }
 
-func addLineSeries(line *charts.Line, serieses map[uint][]chartsopts.LineData) {
-	priorities := make([]uint, 0, len(serieses))
+func addLineSeries(line *charts.Line, series map[uint][]chartsopts.LineData) {
+	priorities := make([]uint, 0, len(series))
 
-	for priority := range serieses {
+	for priority := range series {
 		priorities = append(priorities, priority)
 	}
 
@@ -703,7 +703,7 @@ func addLineSeries(line *charts.Line, serieses map[uint][]chartsopts.LineData) {
 	for _, priority := range priorities {
 		line.AddSeries(
 			strconv.FormatUint(uint64(priority), consts.DecimalBase),
-			serieses[priority],
+			series[priority],
 		)
 	}
 }

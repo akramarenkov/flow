@@ -114,7 +114,7 @@ func createReadmeGraph(
 	received := slices.DeleteFunc(slices.Clone(measurements), measuring.KeepReceived)
 	researched := research.QuantityPerInterval(received, graphInterval)
 
-	serieses := make([]chart.Series, 0, len(researched))
+	series := make([]chart.Series, 0, len(researched))
 
 	// To keep the legends in the same order
 	priorities := slices.SortedFunc(maps.Keys(researched), Compare)
@@ -128,14 +128,14 @@ func createReadmeGraph(
 			yaxis[id] = float64(item.Quantity)
 		}
 
-		series := chart.ContinuousSeries{
+		srs := chart.ContinuousSeries{
 			Name:    fmt.Sprintf("Data of priority %d", priority),
 			XValues: xaxis,
 			YValues: yaxis,
 			Style:   chart.Style{StrokeWidth: 4},
 		}
 
-		serieses = append(serieses, series)
+		series = append(series, srs)
 	}
 
 	graph := chart.Chart{
@@ -157,7 +157,7 @@ func createReadmeGraph(
 		YAxis: chart.YAxis{
 			Name: "Quantity of data items received by handlers, pieces",
 		},
-		Series: serieses,
+		Series: series,
 	}
 
 	graph.Elements = []chart.Renderable{
