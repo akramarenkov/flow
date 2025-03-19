@@ -1,6 +1,7 @@
 package measuring
 
 import (
+	"slices"
 	"sync"
 	"time"
 
@@ -63,7 +64,7 @@ func NewMeasurer(handlersQuantity uint, inputCapacity ...uint) (*Measurer, error
 
 	msr := &Measurer{
 		handlersQuantity: handlersQuantity,
-		inputCapacities:  append([]uint(nil), inputCapacity...),
+		inputCapacities:  slices.Clone(inputCapacity),
 
 		actions:   make(map[uint][]action),
 		channels:  make(map[uint]chan uint),

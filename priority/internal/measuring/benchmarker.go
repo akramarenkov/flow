@@ -1,6 +1,9 @@
 package measuring
 
-import "sync"
+import (
+	"slices"
+	"sync"
+)
 
 // Used to benchmark discipline.
 type Benchmarker struct {
@@ -27,7 +30,7 @@ func NewBenchmarker(handlersQuantity uint, inputCapacity ...uint) (*Benchmarker,
 
 	bnch := &Benchmarker{
 		handlersQuantity: handlersQuantity,
-		inputCapacities:  append([]uint(nil), inputCapacity...),
+		inputCapacities:  slices.Clone(inputCapacity),
 
 		channels:      make(map[uint]chan uint),
 		itemsQuantity: make(map[uint]uint),

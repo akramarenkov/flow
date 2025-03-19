@@ -1,6 +1,7 @@
 package unite
 
 import (
+	"slices"
 	"testing"
 	"time"
 
@@ -303,7 +304,7 @@ func testDiscipline(
 		durations = append(durations, time.Since(previous))
 
 		if noCopy {
-			output = append(output, append([]int(nil), join...))
+			output = append(output, slices.Clone(join))
 		} else {
 			output = append(output, join)
 		}
