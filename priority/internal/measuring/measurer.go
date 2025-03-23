@@ -7,7 +7,6 @@ import (
 
 	"github.com/akramarenkov/flow/priority/types"
 
-	"github.com/akramarenkov/breaker/closing"
 	"github.com/akramarenkov/span"
 	"github.com/akramarenkov/starter"
 )
@@ -42,7 +41,7 @@ type Measurer struct {
 	channels  map[uint]chan uint
 	durations map[uint]time.Duration
 
-	breaker      *closing.Closing
+	breaker      chan struct{}
 	measurements []Measure
 	measuring    chan Measure
 	spans        map[uint]span.Span[uint]
@@ -202,7 +201,7 @@ func (msr *Measurer) Play(discipline Discipline[uint]) ([]Measure, error) {
 	msr.writers()
 
 	if err := <-discipline.Err(); err != nil {
-		msr.breaker.Close()
+		close(msr.breaker)
 		msr.wg.Wait()
 		close(msr.measuring)
 
@@ -211,7 +210,7 @@ func (msr *Measurer) Play(discipline Discipline[uint]) ([]Measure, error) {
 
 	msr.wg.Wait()
 	close(msr.measuring)
-	msr.breaker.Close()
+	close(msr.breaker)
 
 	for measure := range msr.measuring {
 		msr.measurements = append(msr.measurements, measure)
@@ -227,7 +226,7 @@ func (msr *Measurer) Play(discipline Discipline[uint]) ([]Measure, error) {
 func (msr *Measurer) prepare() {
 	quantity := msr.measurementsQuantity()
 
-	msr.breaker = closing.New()
+	msr.breaker = make(chan struct{})
 	msr.measurements = make([]Measure, 0, quantity)
 	msr.measuring = make(chan Measure, quantity)
 	msr.starter = starter.New()
@@ -298,7 +297,7 @@ func (msr *Measurer) writer(priority, shift uint) {
 func (msr *Measurer) write(action action, channel chan uint, sequence uint) (uint, bool) {
 	for range action.Quantity {
 		select {
-		case <-msr.breaker.IsClosed():
+		case <-msr.breaker:
 			return sequence, true
 		case channel <- sequence:
 		}
@@ -319,7 +318,7 @@ func (msr *Measurer) waitDevastation(channel chan uint) bool {
 
 	for {
 		select {
-		case <-msr.breaker.IsClosed():
+		case <-msr.breaker:
 			return true
 		case <-ticker.C:
 			if len(channel) == 0 {
