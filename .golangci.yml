@@ -31,7 +31,6 @@ linters:
     - godox
     - goheader
     - gosec
-    - gosmopolitan
     - govet
     - grouper
     - iface
