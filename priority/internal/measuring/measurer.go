@@ -239,7 +239,7 @@ func (msr *Measurer) measurementsQuantity() uint {
 	return measurementsPerDataItem * msr.itemsQuantity()
 }
 
-// Used to get unique values ​​of data items for all priorities.
+// Used to get unique values of data items for all priorities.
 func (msr *Measurer) prepareSpans() {
 	begin := uint(0)
 

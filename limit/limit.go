@@ -20,7 +20,7 @@ type Opts[Type any] struct {
 	// Note that if the quantity of data items written to the input channel before it
 	// is closed is a multiple of the Quantity field in the rate limit structure, the
 	// discipline will still perform a delay after the last data item is transmitted.
-	// This, with large values ​​of the Interval field in the rate limit structure, will
+	// This, with large values of the Interval field in the rate limit structure, will
 	// result in a long discipline completion time
 	Input <-chan Type
 

@@ -46,7 +46,7 @@ func Fair(quantity uint, priorities []uint, distribution map[uint]uint) error {
 // Used for prioritization.
 //
 // To keep processing data items of all priorities, the quantity of data handlers must
-// be no less than the sum of the values ​​of all priorities.
+// be no less than the sum of the values of all priorities.
 //
 // Example results:
 //
@@ -62,7 +62,7 @@ func Rate(quantity uint, priorities []uint, distribution map[uint]uint) error {
 	base := quantity / divider
 	remainder := quantity % divider
 
-	// Provides rapid achievement of full distribution filling at small values ​​of
+	// Provides rapid achievement of full distribution filling at small values of
 	// quantity of data handlers to speed up work of the discipline
 	quicking := uint(len(priorities))
 

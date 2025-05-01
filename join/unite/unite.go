@@ -170,7 +170,7 @@ func (dsc *Discipline[Type]) add(item []Type) {
 	}
 
 	// Integer overflow is impossible because len() function returns only positive
-	// values ​​for the int type and the sum of the two maximum values ​​for the int type is
+	// values for the int type and the sum of the two maximum values for the int type is
 	// less than the maximum value for the uint type by one
 	if uint(len(item))+uint(len(dsc.join)) > dsc.opts.JoinSize {
 		dsc.pass()
@@ -179,7 +179,7 @@ func (dsc *Discipline[Type]) add(item []Type) {
 	dsc.join = append(dsc.join, item...)
 
 	// Integer overflow is impossible because len() function returns only positive
-	// values ​​for type int and the maximum value for type int is less than the
+	// values for type int and the maximum value for type int is less than the
 	// maximum value for type uint
 	if uint(len(dsc.join)) < dsc.opts.JoinSize {
 		return

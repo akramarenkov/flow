@@ -83,7 +83,7 @@ func QuantityPerInterval(
 		quantities = append(quantities, item)
 	}
 
-	// Padding with zero values ​​in case intervals quantity multiplied by
+	// Padding with zero values in case intervals quantity multiplied by
 	// interval is greater than max time
 	for addition := range intervalsNumber - len(quantities) {
 		item := qot.QoT{

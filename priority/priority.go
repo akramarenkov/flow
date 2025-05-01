@@ -120,7 +120,7 @@ type Discipline[Type any] struct {
 	// Priority list whose actual distribution did not reach operative
 	unreached []uint
 	// Priority list from whose channels it managed to get all data items at
-	// ​​input/output stage for priorities from the unachieved list and, since the
+	// input/output stage for priorities from the unachieved list and, since the
 	// unachieved list may not be complete with respect to the main priority list
 	// then, at any previous input/output stages - interim main priority list
 	useful []uint
@@ -133,7 +133,7 @@ type Discipline[Type any] struct {
 	// Distribution of data items filled by main priority list and total quantity of
 	// data handlers
 	strategic map[uint]uint
-	// Distribution on whose quantities ​​input/output is performed
+	// Distribution on whose quantities input/output is performed
 	tactic map[uint]uint
 
 	err chan error

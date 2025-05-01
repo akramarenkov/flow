@@ -21,14 +21,14 @@ func QuantityPerInterval(
 
 	slices.SortFunc(measurements, measuring.CompareTime)
 
-	// To see the initial zero values ​​on the graph
+	// To see the initial zero values on the graph
 	minimum := -interval
 
 	// One interval added to maximum span value to get maximum time into
 	// the last span
 	//
 	// And one more interval added to maximum span value to see the final zero values
-	// ​on ​the graph
+	// on the graph
 	expansion := 2
 	maximum := measurements[len(measurements)-1].Time + time.Duration(expansion)*interval
 
@@ -100,14 +100,14 @@ func InProcessing(
 
 	slices.SortFunc(measurements, measuring.CompareTime)
 
-	// To see the initial zero values ​​on the graph
+	// To see the initial zero values on the graph
 	minimum := -interval
 
 	// One interval added to maximum span value to get maximum time into
 	// the last span
 	//
 	// And one more interval added to maximum span value to see the final zero values
-	// ​on ​the graph
+	// on the graph
 	expansion := 2
 	maximum := measurements[len(measurements)-1].Time + time.Duration(expansion)*interval
 

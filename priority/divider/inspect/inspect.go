@@ -142,7 +142,7 @@ func isMonotonic(divider types.Divider, opts Opts) Result {
 }
 
 // Finds the minimum quantity of data handlers passed to the divider such that there
-// are no zero values ​​in the distribution created by the divider.
+// are no zero values in the distribution created by the divider.
 func FindMinNonFatalQuantity(divider types.Divider, opts Opts) (uint, Result) {
 	for quantity := range safe.Inc(1, opts.Quantity) {
 		params := Opts{
@@ -166,7 +166,7 @@ func FindMinNonFatalQuantity(divider types.Divider, opts Opts) (uint, Result) {
 	return 0, result
 }
 
-// Checks that there are no zero values ​​in the distribution created by the divider for
+// Checks that there are no zero values in the distribution created by the divider for
 // the specified quantity of data handlers passed to the divider.
 func IsNonFatalQuantity(divider types.Divider, opts Opts) Result {
 	distribution := make(map[uint]uint, len(opts.Priorities))

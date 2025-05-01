@@ -27,7 +27,7 @@ func Quantity(priorities []uint, distribution map[uint]uint) (uint, error) {
 	return quantity, nil
 }
 
-// Checks that there are no zero values ​​in the distribution for specified priorities and
+// Checks that there are no zero values in the distribution for specified priorities and
 // that the distribution and priority list themselves are not empty.
 func IsFilled(priorities []uint, distribution map[uint]uint) bool {
 	if len(distribution) == 0 {
