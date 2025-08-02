@@ -1,5 +1,5 @@
 // Data types of the priority discipline.
-package types
+package priodefs
 
 // Determines in what quantity data items of the specified priorities are
 // distributed among the specified quantity of data handlers.

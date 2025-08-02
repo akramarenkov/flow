@@ -8,7 +8,7 @@ import (
 	"github.com/akramarenkov/flow/priority/internal/measuring"
 	"github.com/akramarenkov/flow/priority/internal/research"
 	"github.com/akramarenkov/flow/priority/internal/unmanaged"
-	"github.com/akramarenkov/flow/priority/types"
+	"github.com/akramarenkov/flow/priority/priodefs"
 
 	"github.com/akramarenkov/safe"
 	"github.com/stretchr/testify/require"
@@ -517,7 +517,7 @@ func BenchmarkDisciplineFair60InputCapacity400(b *testing.B) {
 
 func benchmarkDiscipline(
 	b *testing.B,
-	divisor types.Divider,
+	divisor priodefs.Divider,
 	handlersQuantity uint,
 	inputCapacity ...uint,
 ) {

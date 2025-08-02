@@ -5,7 +5,7 @@ import (
 	"errors"
 
 	priocore "github.com/akramarenkov/flow/priority"
-	"github.com/akramarenkov/flow/priority/types"
+	"github.com/akramarenkov/flow/priority/priodefs"
 )
 
 var (
@@ -13,7 +13,7 @@ var (
 )
 
 // Callback function called in handlers when an data item is received.
-type Handle[P types.Prioritized[Type], Type any] func(prioritized P)
+type Handle[P priodefs.Prioritized[Type], Type any] func(prioritized P)
 
 // Options of the created discipline.
 type Opts[Type any] struct {
@@ -21,10 +21,10 @@ type Opts[Type any] struct {
 	//
 	// For equaling use [divider.Fair] divider, for prioritization use [divider.Rate]
 	// divider or custom divider
-	Divider types.Divider
+	Divider priodefs.Divider
 
 	// Callback function called in handlers when an data item is received
-	Handle Handle[types.Prioritized[Type], Type]
+	Handle Handle[priodefs.Prioritized[Type], Type]
 
 	// Quantity of data handlers between which data items are distributed
 	HandlersQuantity uint

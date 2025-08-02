@@ -5,7 +5,7 @@ import (
 
 	"github.com/akramarenkov/flow/priority"
 	"github.com/akramarenkov/flow/priority/divider"
-	"github.com/akramarenkov/flow/priority/types"
+	"github.com/akramarenkov/flow/priority/priodefs"
 
 	"github.com/stretchr/testify/require"
 )
@@ -13,7 +13,7 @@ import (
 func TestOptsAddInput(t *testing.T) {
 	opts := Opts[int]{
 		Divider:          divider.Fair,
-		Handle:           func(types.Prioritized[int]) {},
+		Handle:           func(priodefs.Prioritized[int]) {},
 		HandlersQuantity: 6,
 	}
 
@@ -31,7 +31,7 @@ func TestOptsAddInput(t *testing.T) {
 
 func TestOptsValidation(t *testing.T) {
 	opts := Opts[int]{
-		Handle: func(types.Prioritized[int]) {},
+		Handle: func(priodefs.Prioritized[int]) {},
 	}
 
 	_, err := New(opts)
@@ -46,7 +46,7 @@ func TestOptsValidation(t *testing.T) {
 
 	opts = Opts[int]{
 		Divider:          divider.Fair,
-		Handle:           func(types.Prioritized[int]) {},
+		Handle:           func(priodefs.Prioritized[int]) {},
 		HandlersQuantity: 6,
 		Inputs: map[uint]<-chan int{
 			1: make(chan int),
@@ -77,7 +77,7 @@ func TestDisciplineError(t *testing.T) {
 	testDiscipline(t, wrong, true)
 }
 
-func testDiscipline(t *testing.T, divisor types.Divider, isErrorExpected bool) {
+func testDiscipline(t *testing.T, divisor priodefs.Divider, isErrorExpected bool) {
 	handlersQuantity := uint(6)
 	itemsQuantity := 100000
 	inputCapacity := handlersQuantity
@@ -90,9 +90,9 @@ func testDiscipline(t *testing.T, divisor types.Divider, isErrorExpected bool) {
 
 	totalItemsQuantity := itemsQuantity * len(inputs)
 
-	received := make(chan types.Prioritized[int], totalItemsQuantity)
+	received := make(chan priodefs.Prioritized[int], totalItemsQuantity)
 
-	handle := func(prioritized types.Prioritized[int]) {
+	handle := func(prioritized priodefs.Prioritized[int]) {
 		received <- prioritized
 	}
 

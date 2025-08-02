@@ -7,7 +7,7 @@ import (
 	"time"
 
 	"github.com/akramarenkov/flow/priority/internal/distrib"
-	"github.com/akramarenkov/flow/priority/types"
+	"github.com/akramarenkov/flow/priority/priodefs"
 )
 
 const (
@@ -20,7 +20,7 @@ type Opts[Type any] struct {
 	//
 	// For equaling use divider.Fair divider, for prioritization use divider.Rate
 	// divider or custom divider
-	Divider types.Divider
+	Divider priodefs.Divider
 
 	// Quantity of data handlers between which data items are distributed
 	HandlersQuantity uint
@@ -110,7 +110,7 @@ type Discipline[Type any] struct {
 	opts Opts[Type]
 
 	inputs  map[uint]input[Type]
-	output  chan types.Prioritized[Type]
+	output  chan priodefs.Prioritized[Type]
 	release chan uint
 
 	// Priority list corresponding to all input channels - main priority list
@@ -154,7 +154,7 @@ func New[Type any](opts Opts[Type]) (*Discipline[Type], error) {
 		opts: opts,
 
 		inputs:  inputs,
-		output:  make(chan types.Prioritized[Type], opts.HandlersQuantity),
+		output:  make(chan priodefs.Prioritized[Type], opts.HandlersQuantity),
 		release: make(chan uint, opts.HandlersQuantity),
 
 		priorities: priorities,
@@ -204,7 +204,7 @@ func prepare[Type any](opts Opts[Type]) (
 // Returns output channel.
 //
 // If this channel is closed, it means that the discipline is terminated.
-func (dsc *Discipline[Type]) Output() <-chan types.Prioritized[Type] {
+func (dsc *Discipline[Type]) Output() <-chan priodefs.Prioritized[Type] {
 	return dsc.output
 }
 
@@ -517,7 +517,7 @@ func (dsc *Discipline[Type]) markInputAsClosed(priority uint) {
 }
 
 func (dsc *Discipline[Type]) send(item Type, priority uint) uint {
-	prioritized := types.Prioritized[Type]{
+	prioritized := priodefs.Prioritized[Type]{
 		Item:     item,
 		Priority: priority,
 	}

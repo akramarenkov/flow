@@ -4,7 +4,7 @@ import (
 	"math"
 	"testing"
 
-	"github.com/akramarenkov/flow/priority/types"
+	"github.com/akramarenkov/flow/priority/priodefs"
 
 	"github.com/stretchr/testify/require"
 )
@@ -97,7 +97,7 @@ func TestRateError(t *testing.T) {
 
 func testDivider(
 	t *testing.T,
-	divider types.Divider,
+	divider priodefs.Divider,
 	quantity uint,
 	priorities []uint,
 	expected map[uint]uint,

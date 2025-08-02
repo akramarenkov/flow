@@ -11,8 +11,8 @@ import (
 
 	"github.com/akramarenkov/flow/priority"
 	"github.com/akramarenkov/flow/priority/divider"
+	"github.com/akramarenkov/flow/priority/priodefs"
 	"github.com/akramarenkov/flow/priority/simple"
-	"github.com/akramarenkov/flow/priority/types"
 
 	"github.com/guptarohit/asciigraph"
 )
@@ -49,7 +49,7 @@ func ExampleDiscipline() {
 
 	startedAt := time.Now()
 
-	handle := func(prioritized types.Prioritized[int]) {
+	handle := func(prioritized priodefs.Prioritized[int]) {
 		// Data item processing
 		measurement := measure{
 			Priority: prioritized.Priority,

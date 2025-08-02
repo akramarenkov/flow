@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/akramarenkov/flow/priority/types"
+	"github.com/akramarenkov/flow/priority/priodefs"
 
 	"github.com/akramarenkov/span"
 	"github.com/akramarenkov/starter"
@@ -349,7 +349,7 @@ func (msr *Measurer) handler(discipline Discipline[uint]) {
 	}
 }
 
-func (msr *Measurer) handle(item types.Prioritized[uint], discipline Discipline[uint]) {
+func (msr *Measurer) handle(item priodefs.Prioritized[uint], discipline Discipline[uint]) {
 	received := Measure{
 		Item:     item.Item,
 		Kind:     KindReceived,

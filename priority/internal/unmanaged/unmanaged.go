@@ -7,7 +7,7 @@ import (
 	"errors"
 	"sync"
 
-	"github.com/akramarenkov/flow/priority/types"
+	"github.com/akramarenkov/flow/priority/priodefs"
 
 	"github.com/akramarenkov/breaker/closing"
 )
@@ -65,7 +65,7 @@ type Discipline[Type any] struct {
 	breaker  *closing.Closing
 	err      chan error
 	failures chan error
-	output   chan types.Prioritized[Type]
+	output   chan priodefs.Prioritized[Type]
 	wg       sync.WaitGroup
 }
 
@@ -81,7 +81,7 @@ func New[Type any](opts Opts[Type]) (*Discipline[Type], error) {
 		breaker:  closing.New(),
 		err:      make(chan error, 1),
 		failures: make(chan error, len(opts.Inputs)),
-		output:   make(chan types.Prioritized[Type], opts.HandlersQuantity),
+		output:   make(chan priodefs.Prioritized[Type], opts.HandlersQuantity),
 	}
 
 	go dsc.main()
@@ -92,7 +92,7 @@ func New[Type any](opts Opts[Type]) (*Discipline[Type], error) {
 // Returns output channel.
 //
 // If this channel is closed, it means that the discipline is terminated.
-func (dsc *Discipline[Type]) Output() <-chan types.Prioritized[Type] {
+func (dsc *Discipline[Type]) Output() <-chan priodefs.Prioritized[Type] {
 	return dsc.output
 }
 
@@ -206,7 +206,7 @@ func (dsc *Discipline[Type]) unfaulty(priority uint) {
 }
 
 func (dsc *Discipline[Type]) send(item Type, priority uint) {
-	prioritized := types.Prioritized[Type]{
+	prioritized := priodefs.Prioritized[Type]{
 		Item:     item,
 		Priority: priority,
 	}

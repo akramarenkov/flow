@@ -2,11 +2,11 @@ package priority
 
 import (
 	"github.com/akramarenkov/flow/priority/internal/distrib"
-	"github.com/akramarenkov/flow/priority/types"
+	"github.com/akramarenkov/flow/priority/priodefs"
 )
 
 func divide(
-	divider types.Divider,
+	divider priodefs.Divider,
 	quantity uint,
 	priorities []uint,
 	distribution map[uint]uint,

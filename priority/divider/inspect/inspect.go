@@ -6,7 +6,7 @@ import (
 
 	"github.com/akramarenkov/flow/internal/consts"
 	"github.com/akramarenkov/flow/priority/internal/distrib"
-	"github.com/akramarenkov/flow/priority/types"
+	"github.com/akramarenkov/flow/priority/priodefs"
 
 	"github.com/akramarenkov/combin"
 	"github.com/akramarenkov/reusable"
@@ -27,7 +27,7 @@ var (
 
 // Checks that the total quantity of data items in the distribution created by the
 // divider is equal to the quantity of data handlers passed to the divider.
-func IsQuantityPreserved(divider types.Divider, set []Opts) Result {
+func IsQuantityPreserved(divider priodefs.Divider, set []Opts) Result {
 	for _, opts := range set {
 		if result := isQuantityPreserved(divider, opts); result.Conclusion != nil {
 			return result
@@ -37,7 +37,7 @@ func IsQuantityPreserved(divider types.Divider, set []Opts) Result {
 	return Result{}
 }
 
-func isQuantityPreserved(divider types.Divider, opts Opts) Result {
+func isQuantityPreserved(divider priodefs.Divider, opts Opts) Result {
 	distribution := make(map[uint]uint, len(opts.Priorities))
 	priorities := reusable.New[uint](len(opts.Priorities))
 
@@ -89,7 +89,7 @@ func isQuantityPreserved(divider types.Divider, opts Opts) Result {
 // Checks that the quantity of data items for each priority in the distribution
 // created by the divider is monotonically non-decreasing as the quantity of data
 // handlers passed to the divider increases.
-func IsMonotonic(divider types.Divider, set []Opts) Result {
+func IsMonotonic(divider priodefs.Divider, set []Opts) Result {
 	for _, opts := range set {
 		if result := isMonotonic(divider, opts); result.Conclusion != nil {
 			return result
@@ -99,7 +99,7 @@ func IsMonotonic(divider types.Divider, set []Opts) Result {
 	return Result{}
 }
 
-func isMonotonic(divider types.Divider, opts Opts) Result {
+func isMonotonic(divider priodefs.Divider, opts Opts) Result {
 	priorities := reusable.New[uint](len(opts.Priorities))
 
 	for combination := range combin.Every(opts.Priorities) {
@@ -143,7 +143,7 @@ func isMonotonic(divider types.Divider, opts Opts) Result {
 
 // Finds the minimum quantity of data handlers passed to the divider such that there
 // are no zero values in the distribution created by the divider.
-func FindMinNonFatalQuantity(divider types.Divider, opts Opts) (uint, Result) {
+func FindMinNonFatalQuantity(divider priodefs.Divider, opts Opts) (uint, Result) {
 	for quantity := range safe.Inc(1, opts.Quantity) {
 		params := Opts{
 			Quantity:   quantity,
@@ -168,7 +168,7 @@ func FindMinNonFatalQuantity(divider types.Divider, opts Opts) (uint, Result) {
 
 // Checks that there are no zero values in the distribution created by the divider for
 // the specified quantity of data handlers passed to the divider.
-func IsNonFatalQuantity(divider types.Divider, opts Opts) Result {
+func IsNonFatalQuantity(divider priodefs.Divider, opts Opts) Result {
 	distribution := make(map[uint]uint, len(opts.Priorities))
 	priorities := reusable.New[uint](len(opts.Priorities))
 
@@ -208,7 +208,7 @@ func IsNonFatalQuantity(divider types.Divider, opts Opts) Result {
 // divider will not differ from the real value by the specified relative difference.
 //
 // Suitable difference is relative and is specified as a percentage.
-func FindMinSuitableQuantity(divider types.Divider, opts Opts, suitableDiff float64) (uint, Result) {
+func FindMinSuitableQuantity(divider priodefs.Divider, opts Opts, suitableDiff float64) (uint, Result) {
 	for quantity := range safe.Inc(1, opts.Quantity) {
 		params := Opts{
 			Quantity:   quantity,
@@ -236,7 +236,7 @@ func FindMinSuitableQuantity(divider types.Divider, opts Opts, suitableDiff floa
 // priority does not differ from the real value by the specified relative difference.
 //
 // Suitable difference is relative and is specified as a percentage.
-func IsSuitableQuantity(divider types.Divider, opts Opts, suitableDiff float64) Result {
+func IsSuitableQuantity(divider priodefs.Divider, opts Opts, suitableDiff float64) Result {
 	referenceQuantity, referenceRatio, err := referenceBasis(opts)
 	if err != nil {
 		result := Result{
